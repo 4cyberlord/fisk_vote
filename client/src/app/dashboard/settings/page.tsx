@@ -159,9 +159,9 @@ export default function SettingsPage() {
           Object.entries(apiError.response.data.errors).forEach(([field, messages]) => {
             passwordForm.setError(field as "currentPassword" | "newPassword" | "confirmPassword", {
               message: Array.isArray(messages) ? messages[0] : String(messages),
-            });
           });
-        }
+        });
+      }
       }
       toast.error(errorMessage);
     } finally {
@@ -185,7 +185,7 @@ export default function SettingsPage() {
     enabled: boolean;
     onChange: (enabled: boolean) => void;
   }) => {
-    return (
+  return (
       <button
         type="button"
         onClick={() => onChange(!enabled)}
@@ -284,10 +284,10 @@ export default function SettingsPage() {
               );
             })}
           </nav>
-        </div>
+              </div>
 
         {/* Tab Content */}
-        <div className="space-y-6">
+              <div className="space-y-6">
           {/* Security & Privacy Tab */}
           {activeTab === "security" && (
             <>
@@ -301,153 +301,153 @@ export default function SettingsPage() {
                   <p className="text-sm text-gray-500 mb-4">Update your password to keep your account secure</p>
 
                   <form onSubmit={passwordForm.handleSubmit(handlePasswordSubmit)} className="space-y-5">
-                    {/* Current Password */}
-                    <div>
+                {/* Current Password */}
+                <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Current Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          {...passwordForm.register("currentPassword", {
-                            required: "Current password is required",
-                          })}
-                          type={showCurrentPassword ? "text" : "password"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...passwordForm.register("currentPassword", {
+                        required: "Current password is required",
+                      })}
+                      type={showCurrentPassword ? "text" : "password"}
                           className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 focus:ring-black focus:border-black focus:outline-none"
-                          placeholder="Enter current password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                           aria-label={showCurrentPassword ? "Hide password" : "Show password"}
-                        >
-                          {showCurrentPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      {passwordForm.formState.errors.currentPassword && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {passwordForm.formState.errors.currentPassword.message}
-                        </p>
+                    >
+                      {showCurrentPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
                       )}
-                    </div>
+                    </button>
+                  </div>
+                  {passwordForm.formState.errors.currentPassword && (
+                        <p className="mt-1 text-sm text-red-600">
+                      {passwordForm.formState.errors.currentPassword.message}
+                    </p>
+                  )}
+                </div>
 
-                    {/* New Password */}
-                    <div>
+                {/* New Password */}
+                <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
-                      <div className="relative">
-                        <input
-                          {...passwordForm.register("newPassword", {
-                            required: "New password is required",
-                            minLength: {
-                              value: 8,
-                              message: "Password must be at least 8 characters",
-                            },
-                            onChange: (e) => {
-                              setPasswordStrength(calculatePasswordStrength(e.target.value));
-                            },
-                          })}
-                          type={showNewPassword ? "text" : "password"}
+                  <div className="relative">
+                    <input
+                      {...passwordForm.register("newPassword", {
+                        required: "New password is required",
+                        minLength: {
+                          value: 8,
+                          message: "Password must be at least 8 characters",
+                        },
+                        onChange: (e) => {
+                          setPasswordStrength(calculatePasswordStrength(e.target.value));
+                        },
+                      })}
+                      type={showNewPassword ? "text" : "password"}
                           className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 focus:ring-black focus:border-black focus:outline-none"
-                          placeholder="Enter new password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      placeholder="Enter new password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                           aria-label={showNewPassword ? "Hide password" : "Show password"}
-                        >
-                          {showNewPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  {passwordForm.watch("newPassword") && (
+                    <div className="mt-2">
+                      <div className="flex gap-1 mb-1">
+                        {[1, 2, 3, 4].map((level) => (
+                          <div
+                            key={level}
+                            className={`h-1.5 flex-1 rounded-full ${
+                              level <= passwordStrength
+                                ? passwordStrength <= 2
+                                  ? "bg-red-500"
+                                  : passwordStrength === 3
+                                  ? "bg-yellow-500"
+                                  : "bg-green-500"
+                                : "bg-gray-200"
+                            }`}
+                          />
+                        ))}
                       </div>
-                      {passwordForm.watch("newPassword") && (
-                        <div className="mt-2">
-                          <div className="flex gap-1 mb-1">
-                            {[1, 2, 3, 4].map((level) => (
-                              <div
-                                key={level}
-                                className={`h-1.5 flex-1 rounded-full ${
-                                  level <= passwordStrength
-                                    ? passwordStrength <= 2
-                                      ? "bg-red-500"
-                                      : passwordStrength === 3
-                                      ? "bg-yellow-500"
-                                      : "bg-green-500"
-                                    : "bg-gray-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {passwordStrength === 0 && "Enter a password"}
-                            {passwordStrength === 1 && "Weak password"}
-                            {passwordStrength === 2 && "Fair password"}
-                            {passwordStrength === 3 && "Good password"}
-                            {passwordStrength === 4 && "Strong password"}
-                          </p>
-                        </div>
-                      )}
-                      {passwordForm.formState.errors.newPassword && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {passwordForm.formState.errors.newPassword.message}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500">
+                        {passwordStrength === 0 && "Enter a password"}
+                        {passwordStrength === 1 && "Weak password"}
+                        {passwordStrength === 2 && "Fair password"}
+                        {passwordStrength === 3 && "Good password"}
+                        {passwordStrength === 4 && "Strong password"}
+                      </p>
                     </div>
+                  )}
+                  {passwordForm.formState.errors.newPassword && (
+                        <p className="mt-1 text-sm text-red-600">
+                      {passwordForm.formState.errors.newPassword.message}
+                        </p>
+                  )}
+                </div>
 
-                    {/* Confirm Password */}
-                    <div>
+                {/* Confirm Password */}
+                <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Confirm Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          {...passwordForm.register("confirmPassword", {
-                            required: "Please confirm your password",
-                          })}
-                          type={showConfirmPassword ? "text" : "password"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      {...passwordForm.register("confirmPassword", {
+                        required: "Please confirm your password",
+                      })}
+                      type={showConfirmPassword ? "text" : "password"}
                           className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-gray-900 placeholder:text-gray-400 focus:ring-black focus:border-black focus:outline-none"
-                          placeholder="Confirm new password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="w-5 h-5" />
-                          ) : (
-                            <Eye className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                      {passwordForm.watch("newPassword") &&
-                        passwordForm.watch("confirmPassword") &&
-                        passwordForm.watch("newPassword") === passwordForm.watch("confirmPassword") &&
-                        !passwordForm.formState.errors.confirmPassword && (
-                          <div className="mt-2 flex items-center gap-1 text-sm text-green-600">
-                            <CheckCircle2 className="w-4 h-4" />
-                            Passwords match
-                          </div>
-                        )}
-                      {passwordForm.formState.errors.confirmPassword && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {passwordForm.formState.errors.confirmPassword.message}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Save Button */}
+                      placeholder="Confirm new password"
+                    />
                     <button
-                      type="submit"
-                      disabled={isSaving || passwordForm.formState.isSubmitting}
+                      type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  {passwordForm.watch("newPassword") &&
+                    passwordForm.watch("confirmPassword") &&
+                    passwordForm.watch("newPassword") === passwordForm.watch("confirmPassword") &&
+                    !passwordForm.formState.errors.confirmPassword && (
+                      <div className="mt-2 flex items-center gap-1 text-sm text-green-600">
+                        <CheckCircle2 className="w-4 h-4" />
+                        Passwords match
+                      </div>
+                    )}
+                  {passwordForm.formState.errors.confirmPassword && (
+                        <p className="mt-1 text-sm text-red-600">
+                      {passwordForm.formState.errors.confirmPassword.message}
+                        </p>
+                  )}
+                </div>
+
+                {/* Save Button */}
+                    <button
+                    type="submit"
+                    disabled={isSaving || passwordForm.formState.isSubmitting}
                       className="px-5 py-2 rounded-md bg-black text-white font-medium hover:bg-gray-900 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isSaving ? "Saving..." : "Save"}
@@ -489,17 +489,17 @@ export default function SettingsPage() {
                         <div className="p-2 bg-gray-100 rounded-md">
                           <svg
                             className="w-5 h-5 text-gray-700"
-                            fill="none"
+                          fill="none"
                             stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
+                          viewBox="0 0 24 24"
+                        >
+                          <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
                               strokeWidth="2"
                               d="M12 6v6l4 2m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                          />
+                        </svg>
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">Authenticator app (TOTP)</p>
@@ -546,7 +546,7 @@ export default function SettingsPage() {
                                 {session.is_current && (
                                   <span className="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 rounded-full">
                                     Active
-                                  </span>
+                      </span>
                                 )}
                               </div>
                               <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500 mt-1">
@@ -554,8 +554,8 @@ export default function SettingsPage() {
                                   <span className="flex items-center gap-1">
                                     <Monitor className="w-3 h-3" />
                                     {session.device_info}
-                                  </span>
-                                )}
+                      </span>
+                    )}
                                 {session.ip_address && (
                                   <span className="flex items-center gap-1">
                                     <Globe className="w-3 h-3" />
@@ -575,21 +575,21 @@ export default function SettingsPage() {
                               </div>
                             </div>
                             {!session.is_current && (
-                              <button
-                                onClick={() => {
+                    <button
+                      onClick={() => {
                                   setSessionToRevoke(session.jti);
                                   setShowRevokeSessionModal(true);
-                                }}
+                      }}
                                 disabled={revokeSessionMutation.isPending}
                                 className="text-sm text-red-600 hover:text-red-700 disabled:opacity-50"
-                              >
+                    >
                                 Revoke
-                              </button>
-                            )}
-                          </div>
-                        </div>
+                    </button>
+                  )}
+                </div>
+              </div>
                       ))}
-                    </div>
+          </div>
                     <div className="border-t border-gray-200 p-4 bg-gray-50">
                       <div className="flex items-center justify-between gap-4">
                         <div>
@@ -732,9 +732,9 @@ export default function SettingsPage() {
                                     </span>
                                   </div>
                                 </div>
-                              </div>
-                            </div>
-                          );
+      </div>
+    </div>
+  );
                         })}
                       </div>
                     </div>

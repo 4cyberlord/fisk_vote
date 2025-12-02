@@ -130,7 +130,21 @@ class StudentRegistrationController extends Controller
             // This automatically triggers SendEmailVerificationNotification listener
             // which calls $user->sendEmailVerificationNotification()
             // We've overridden that method in User model to use VerifyStudentEmail
-            event(new Registered($user));
+            //
+            // However, in environments where email is not yet configured, this can fail
+            // and previously caused the entire registration request to return 500.
+            // We now catch any notification-related errors so the student account is
+            // still created successfully, and log the problem for admins to fix.
+            try {
+                event(new Registered($user));
+            } catch (\Throwable $notificationException) {
+                Log::error('API Register: Email verification notification failed', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $notificationException->getMessage(),
+                    'trace' => $notificationException->getTraceAsString(),
+                ]);
+            }
 
             Log::info('API Register: Registration completed successfully', [
                 'user_id' => $user->id,
