@@ -1,0 +1,113 @@
+@import "tailwindcss";
+@import "primereact/resources/themes/lara-light-blue/theme.css";
+@import "primereact/resources/primereact.min.css";
+@import "primeicons/primeicons.css";
+
+/* Calendar Day Button Alignment Fix */
+.rdp-day_button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* Calendar Grid Layout Fix */
+.rdp-row {
+  display: flex !important;
+  width: 100% !important;
+}
+
+.rdp-cell {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.rdp-head_cell {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-roboto: var(--font-roboto);
+}
+
+/* Enable dark mode class strategy for Tailwind */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+  }
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+/* Dark mode styles */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+/* System preference fallback (only when no explicit theme is set) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not(.dark) {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-roboto), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Toast Animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out;
+}
+
+/* PrimeReact Calendar Hover Fix */
+.p-calendar .p-datepicker table td > span:hover {
+  background-color: rgb(241, 245, 249) !important;
+  color: rgb(15, 23, 42) !important;
+}
+
+.p-calendar .p-datepicker table td.p-datepicker-day-selected > span:hover {
+  background-color: rgb(30, 41, 59) !important;
+  color: white !important;
+}
+
+.p-calendar .p-datepicker table td.p-datepicker-day-today > span:hover {
+  background-color: rgb(209, 250, 229) !important;
+  color: rgb(4, 120, 87) !important;
+}
+
+.p-calendar .p-datepicker table td > span {
+  transition: all 0.2s ease !important;
+}
