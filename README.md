@@ -339,6 +339,40 @@ php artisan storage:link
 
 ---
 
+### 5. Set Up Laravel Scheduler (Cron) for Production & Local Dev
+
+The application relies on the Laravel scheduler for background maintenance tasks, including:
+
+- Cleaning up **unverified student registrations** that did not verify their email within 2 minutes (`students:cleanup-unverified`).
+- Any future scheduled jobs defined in `backend/routes/console.php`.
+
+To ensure this runs in **production** (and optionally in local dev so it behaves like production), add the following cron entry on the server:
+
+```bash
+* * * * * cd /path/to/fisk_voting_system/backend && php artisan schedule:run >> /dev/null 2>&1
+```
+
+- Replace `/path/to/fisk_voting_system/backend` with the absolute path on your server.
+- This runs the Laravel scheduler **every minute**, which in turn runs all scheduled commands.
+
+After this is configured:
+
+- Any **student user** who does not verify their email within 2 minutes of registration and still has `email_verified_at = NULL` will be **automatically removed** by the `students:cleanup-unverified` command.
+
+For local development that should feel like production, you can either:
+
+- Use the same cron entry on your local machine, **or**
+- Manually run:
+
+```bash
+cd backend
+php artisan schedule:run
+```
+
+whenever you want scheduled tasks to execute.
+
+---
+
 ## 🏃 Running the Application
 
 ### Start Backend Server

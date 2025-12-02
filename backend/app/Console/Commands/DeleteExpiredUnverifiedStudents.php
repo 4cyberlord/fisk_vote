@@ -27,17 +27,16 @@ class DeleteExpiredUnverifiedStudents extends Command
      */
     public function handle(): int
     {
-        // Match the 2-minute verification link expiry
+        // Match the 2-minute verification link expiry.
+        // Any unverified student created more than 2 minutes ago is eligible for deletion,
+        // regardless of how old the record is.
         $expiryThreshold = now()->subMinutes(2);
 
-        // Safety window so we only touch *recent* signups, not old seeded data
-        $recentWindowStart = now()->subMinutes(10);
-
-        $this->info('Cleaning up unverified student accounts...');
+        $this->info('Cleaning up unverified student accounts (older than 2 minutes)...');
 
         $query = User::query()
             ->whereNull('email_verified_at')
-            ->whereBetween('created_at', [$recentWindowStart, $expiryThreshold])
+            ->where('created_at', '<=', $expiryThreshold)
             ->whereHas('roles', function ($q) {
                 $q->where('name', 'Student');
             });
