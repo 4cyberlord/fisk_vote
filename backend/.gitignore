@@ -1,0 +1,61 @@
+# Laravel specific ignores
+*.log
+.DS_Store
+
+# Environment files
+.env
+.env.backup
+.env.production
+.env.local
+.env.*.local
+
+# IDE files
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+
+# Dependencies
+/node_modules
+/vendor
+
+# Build files
+/public/build
+/public/hot
+/public/storage
+
+# Storage
+/storage/*.key
+/storage/pail
+/storage/logs/*.log
+!/storage/logs/.gitkeep
+!/storage/framework/cache/.gitkeep
+!/storage/framework/sessions/.gitkeep
+!/storage/framework/testing/.gitkeep
+!/storage/framework/views/.gitkeep
+!/storage/app/.gitkeep
+!/storage/app/public/.gitkeep
+!/storage/app/private/.gitkeep
+
+# Homestead
+Homestead.json
+Homestead.yaml
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Testing
+/.phpunit.cache
+/coverage
+.phpunit.result.cache
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

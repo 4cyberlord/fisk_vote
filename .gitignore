@@ -1,0 +1,52 @@
+# Root level ignores
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Dependencies (root level only - subdirectories have their own .gitignore)
+node_modules/
+vendor/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE files
+.idea/
+.vscode/
+.fleet/
+.nova/
+.zed/
+*.swp
+*.swo
+*~
+
+# Build artifacts
+dist/
+build/
+*.tsbuildinfo
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Logs
+*.log
+logs/
+
+# Documentation build
+docs/_build/
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Note: composer.lock and package-lock.json should be committed for dependency consistency
