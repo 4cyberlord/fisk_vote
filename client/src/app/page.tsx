@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components";
@@ -9,7 +8,6 @@ import { PublicHeader } from "@/components/layout/PublicHeader";
 import { PublicFooter } from "@/components/layout/PublicFooter";
 
 export default function HomePage() {
-  const router = useRouter();
   const { isAuthenticated } = useAuth();
 
   const [countdown, setCountdown] = useState({
@@ -41,12 +39,8 @@ export default function HomePage() {
     return () => window.clearInterval(intervalId);
   }, []);
 
-  // Redirect authenticated users to dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.push("/dashboard");
-    }
-  }, [isAuthenticated, router]);
+  // Home page is public - no automatic redirects
+  // Authenticated users can manually navigate to dashboard via the button
 
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col">
