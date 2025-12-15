@@ -18,16 +18,29 @@ class ParticipationRateWidget extends BaseWidget
             $query->where('name', 'student');
         })->count();
 
-        // Get active elections
+        // Get only the 3 most recent active elections (currently open or upcoming)
+        // Exclude old elections from previous years
+        $currentYear = now()->year;
         $activeElections = Election::where('status', 'active')
-            ->where('start_time', '<=', now())
-            ->where('end_time', '>=', now())
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    // Currently open elections
+                    $q->where('start_time', '<=', now())
+                      ->where('end_time', '>=', now());
+                })->orWhere(function ($q) {
+                    // Upcoming elections
+                    $q->where('start_time', '>', now());
+                });
+            })
+            ->whereYear('start_time', '>=', $currentYear - 1) // Only elections from current year or last year
+            ->orderBy('start_time', 'desc') // Most recent first
+            ->limit(3)
             ->get();
 
         $stats = [];
 
         if ($activeElections->count() > 0) {
-            foreach ($activeElections->take(3) as $election) {
+            foreach ($activeElections as $election) {
                 $totalEligible = User::whereHas('roles', function ($query) {
                     $query->where('name', 'student');
                 })->get()->filter(function ($user) use ($election) {

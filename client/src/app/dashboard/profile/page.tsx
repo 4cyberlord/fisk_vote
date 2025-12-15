@@ -1,13 +1,46 @@
 "use client";
 
 import { useAuth, useCurrentUser } from "@/hooks/useAuth";
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Button } from "@/components";
 import { useForm } from "react-hook-form";
 import { api } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import Avatar, { genConfig } from "react-nice-avatar";
+
+// Helper to resolve image URLs (handles relative paths from backend)
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  // Already absolute URL
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  // Relative path - prepend backend URL
+  if (url.startsWith("/")) {
+    return `${BACKEND_URL}${url}`;
+  }
+  return `${BACKEND_URL}/${url}`;
+}
+
+// Format phone number to use dashes (e.g., 385-446-1000)
+function formatPhoneNumber(phone: string | null | undefined): string {
+  if (!phone) return "";
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, "");
+  // Format as XXX-XXX-XXXX for 10 digits
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  // Format as X-XXX-XXX-XXXX for 11 digits (with country code)
+  if (digits.length === 11) {
+    return `${digits.slice(0, 1)}-${digits.slice(1, 4)}-${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+  // Otherwise just replace dots/spaces with dashes
+  return phone.replace(/[.\s]/g, "-");
+}
 
 export default function ProfilePage() {
   const { user: storeUser } = useAuth();
@@ -27,20 +60,43 @@ export default function ProfilePage() {
   // Form for profile information
   const profileForm = useForm({
     defaultValues: {
-      studentId: user?.student_id || "",
-      universityEmailAlt: user?.university_email || "",
-      fiskEmail: user?.email || "",
-      personalEmail: user?.personal_email || "",
-      phoneNumber: user?.phone_number || "",
-      address: user?.address || "",
-      department: user?.department || "",
-      major: user?.major || "",
-      classLevel: user?.class_level || "",
-      studentType: user?.student_type || "",
-      citizenshipStatus: user?.citizenship_status || "",
+      studentId: "",
+      universityEmailAlt: "",
+      fiskEmail: "",
+      personalEmail: "",
+      phoneNumber: "",
+      address: "",
+      department: "",
+      major: "",
+      classLevel: "",
+      studentType: "",
+      citizenshipStatus: "",
       organizations: "",
     },
   });
+
+  // Reset form when user data loads
+  useEffect(() => {
+    if (user) {
+      profileForm.reset({
+        studentId: user.student_id || "",
+        universityEmailAlt: user.university_email || "",
+        fiskEmail: user.email || "",
+        personalEmail: user.personal_email || "",
+        phoneNumber: formatPhoneNumber(user.phone_number),
+        address: user.address || "",
+        department: user.department || "",
+        major: user.major || "",
+        classLevel: user.class_level || "",
+        studentType: user.student_type || "",
+        citizenshipStatus: user.citizenship_status || "",
+        organizations: Array.isArray((user as any).organizations) 
+          ? (user as any).organizations.map((org: any) => org.name || org).join(", ")
+          : "",
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
 
   const handleProfileSubmit = async (data: any) => {
@@ -110,10 +166,25 @@ export default function ProfilePage() {
 
       toast.success("Profile photo updated successfully.");
     } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.response?.data?.errors?.profile_photo?.[0] ||
-        "Failed to upload profile photo. Please try again.";
+      // Get specific validation error or fallback message
+      const errors = error?.response?.data?.errors;
+      const validationError = errors?.profile_photo?.[0];
+      const generalMessage = error?.response?.data?.message;
+      
+      // Log full error details for debugging
+      console.error("Profile photo upload error:", JSON.stringify(error?.response?.data, null, 2));
+      
+      let message = "Failed to upload profile photo. Please try again.";
+      if (validationError) {
+        message = validationError;
+      } else if (errors && Object.keys(errors).length > 0) {
+        // Get first error from any field
+        const firstErrorKey = Object.keys(errors)[0];
+        message = errors[firstErrorKey]?.[0] || message;
+      } else if (generalMessage && generalMessage !== "Validation failed.") {
+        message = generalMessage;
+      }
+      
       toast.error(message);
     } finally {
       setIsUploadingPhoto(false);
@@ -124,6 +195,23 @@ export default function ProfilePage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    // Client-side validation
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    const maxSize = 2 * 1024 * 1024; // 2MB (PHP default limit)
+    
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Please upload a JPEG, PNG, GIF, or WebP image.");
+      e.target.value = "";
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      toast.error(`Image must be smaller than 2MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB.`);
+      e.target.value = "";
+      return;
+    }
+    
     void uploadProfilePhoto(file);
     // Reset input so the same file can be selected again if needed
     e.target.value = "";
@@ -180,7 +268,7 @@ export default function ProfilePage() {
                       {user?.profile_photo ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={user.profile_photo}
+                          src={getImageUrl(user.profile_photo) || ""}
                           alt={user.name || "Profile photo"}
                           className="h-20 w-20 object-cover"
                           loading="lazy"

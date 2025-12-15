@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import dayjs from "dayjs";
+import dayjs, { formatDate, parseBackendDate, nowInAppTimezone } from "@/lib/dayjs";
 import { motion } from "framer-motion";
 import "react-day-picker/dist/style.css";
 import {
@@ -157,14 +157,14 @@ export default function DashboardPage() {
   const votesOverTimeMap: Record<string, number> = {};
   (myVotes || []).forEach((entry) => {
     if (!entry.voted_at) return;
-    const dayKey = dayjs(entry.voted_at).format("YYYY-MM-DD");
+    const dayKey = formatDate(entry.voted_at, "YYYY-MM-DD");
     votesOverTimeMap[dayKey] = (votesOverTimeMap[dayKey] || 0) + 1;
   });
 
   const votesOverTimeData = Object.entries(votesOverTimeMap)
     .sort(([a], [b]) => (a < b ? -1 : 1))
     .map(([date, count]) => ({
-      date: dayjs(date).format("MMM D"),
+      date: formatDate(date, "MMM D"),
       votes: count,
     }));
 
@@ -380,9 +380,7 @@ export default function DashboardPage() {
                       <p>
                         Ends{" "}
                         <span className="font-medium">
-                          {dayjs(nextClosing.end_time).format(
-                            "MMM D, YYYY [at] h:mm A"
-                          )}
+                          {formatDate(nextClosing.end_time)}
                         </span>
                       </p>
                       <p className="text-xs text-gray-500">
@@ -392,9 +390,8 @@ export default function DashboardPage() {
                     </div>
                     <Link
                       href={`/dashboard/vote/${nextClosing.id}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors self-start sm:self-auto"
+                      className="group inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-lg hover:from-indigo-700 hover:to-indigo-600 shadow-md hover:shadow-lg transition-all self-start sm:self-auto"
                     >
-                      Go to ballot
                       <svg
                         className="w-4 h-4"
                         fill="none"
@@ -405,7 +402,21 @@ export default function DashboardPage() {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M9 5l7 7-7 7"
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      Vote Now
+                      <svg
+                        className="w-4 h-4 transition-transform group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
                         />
                       </svg>
                     </Link>
@@ -739,9 +750,7 @@ export default function DashboardPage() {
                           {election.title}
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          {dayjs(election.end_time).format(
-                            "MMM D, YYYY [at] h:mm A"
-                          )}
+                          {formatDate(election.end_time)}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
@@ -1167,7 +1176,7 @@ export default function DashboardPage() {
                                 {election.title}
                               </p>
                               <p className="text-[10px] text-gray-600 mt-0.5 font-medium">
-                                Ends {dayjs(election.end_time).format("MMM D, YYYY")}
+                                Ends {formatDate(election.end_time, "MMM D, YYYY")}
                               </p>
                             </div>
                             <svg
@@ -1219,9 +1228,7 @@ export default function DashboardPage() {
                           </p>
                           <p className="text-xs text-gray-500">
                             {entry.voted_at
-                              ? dayjs(entry.voted_at).format(
-                                  "MMM D, YYYY [at] h:mm A"
-                                )
+                              ? formatDate(entry.voted_at)
                               : "Date not available"}
                           </p>
                         </div>

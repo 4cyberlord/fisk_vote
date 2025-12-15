@@ -20,7 +20,19 @@ use Illuminate\Support\Facades\Route;
 // API Version 1
 Route::prefix('v1')->group(function () {
     require __DIR__ . '/api/v1/students.php';
-    
+
+    // Blog routes (public)
+    Route::prefix('blog')->name('api.v1.blog.')->group(function () {
+        Route::get('/posts', [\App\Http\Controllers\Api\BlogController::class, 'index'])->name('posts.index');
+        Route::get('/posts/{id}', [\App\Http\Controllers\Api\BlogController::class, 'show'])->name('posts.show');
+        Route::get('/categories', [\App\Http\Controllers\Api\BlogController::class, 'categories'])->name('categories.index');
+        Route::get('/featured', [\App\Http\Controllers\Api\BlogController::class, 'featured'])->name('featured');
+        Route::get('/popular', [\App\Http\Controllers\Api\BlogController::class, 'popular'])->name('popular');
+        Route::get('/recent', [\App\Http\Controllers\Api\BlogController::class, 'recent'])->name('recent');
+        Route::get('/posts/{id}/related', [\App\Http\Controllers\Api\BlogController::class, 'related'])->name('posts.related');
+        Route::get('/search', [\App\Http\Controllers\Api\BlogController::class, 'search'])->name('search');
+    });
+
     // Admin routes (protected by auth middleware)
     Route::middleware('auth:api')->prefix('admin')->name('api.v1.admin.')->group(function () {
         Route::get('/elections/{id}/results/export/csv', [\App\Http\Controllers\Api\Admin\ElectionResultsExportController::class, 'exportCsv'])

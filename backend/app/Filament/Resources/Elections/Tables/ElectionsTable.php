@@ -51,12 +51,12 @@ class ElectionsTable
 
                 TextColumn::make('start_time')
                     ->label('Start Time')
-                    ->dateTime()
+                    ->dateTime('M d, Y g:i A')
                     ->sortable(),
 
                 TextColumn::make('end_time')
                     ->label('End Time')
-                    ->dateTime()
+                    ->dateTime('M d, Y g:i A')
                     ->sortable(),
 
                 IconColumn::make('is_universal')

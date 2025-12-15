@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Students;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Services\TimeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -27,15 +28,18 @@ class StudentElectionController extends Controller
                 ], 401);
             }
 
-            // Get current time
-            $now = now();
+            // Get current time in UTC for consistent comparison
+            $now = \Carbon\Carbon::now('UTC');
 
-            // Query active elections that are currently open
+            // Query active elections - get all active elections and filter by current_status
+            // This ensures we use the model's getCurrentStatusAttribute which handles timezone correctly
             $elections = Election::where('status', 'active')
-                ->where('start_time', '<=', $now)
-                ->where('end_time', '>=', $now)
-                ->orderBy('start_time', 'asc')
-                ->get();
+                ->get()
+                ->filter(function ($election) {
+                    return $election->current_status === 'Open';
+                })
+                ->sortBy('start_time')
+                ->values();
 
             // Filter elections by eligibility
             $eligibleElections = $elections->filter(function ($election) use ($user) {
@@ -53,8 +57,10 @@ class StudentElectionController extends Controller
                     'ranking_levels' => $election->ranking_levels,
                     'allow_write_in' => $election->allow_write_in,
                     'allow_abstain' => $election->allow_abstain,
-                    'start_time' => $election->start_time->toIso8601String(),
-                    'end_time' => $election->end_time->toIso8601String(),
+                    'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                    'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'current_status' => $election->current_status,
                     'has_voted' => $election->hasUserVoted($user),
                     'positions_count' => $election->positions()->count(),
@@ -75,7 +81,8 @@ class StudentElectionController extends Controller
                 'data' => $electionsData->values(), // Reset array keys
                 'meta' => [
                     'total' => $electionsData->count(),
-                    'timestamp' => $now->toIso8601String(),
+                    'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
 
@@ -132,8 +139,10 @@ class StudentElectionController extends Controller
                     'ranking_levels' => $election->ranking_levels,
                     'allow_write_in' => $election->allow_write_in,
                     'allow_abstain' => $election->allow_abstain,
-                    'start_time' => $election->start_time->toIso8601String(),
-                    'end_time' => $election->end_time->toIso8601String(),
+                    'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                    'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'status' => $election->status,
                     'current_status' => $election->current_status,
                     'has_voted' => $election->hasUserVoted($user),
@@ -156,6 +165,7 @@ class StudentElectionController extends Controller
                 'meta' => [
                     'total' => $electionsData->count(),
                     'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
 
@@ -198,8 +208,10 @@ class StudentElectionController extends Controller
                     'title' => $election->title,
                     'description' => $election->description,
                     'type' => $election->type,
-                    'start_time' => $election->start_time?->toIso8601String(),
-                    'end_time' => $election->end_time?->toIso8601String(),
+                    'start_time' => $election->start_time?->format('Y-m-d H:i:s'),
+                    'end_time' => $election->end_time?->format('Y-m-d H:i:s'),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'status' => $election->status,
                     'current_status' => $election->current_status,
                     'positions_count' => $election->positions()->count(),
@@ -221,7 +233,8 @@ class StudentElectionController extends Controller
                     'open' => $openCount,
                     'upcoming' => $upcomingCount,
                     'closed' => $closedCount,
-                    'timestamp' => $now->toIso8601String(),
+                    'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
         } catch (\Exception $e) {
@@ -284,8 +297,10 @@ class StudentElectionController extends Controller
                 'ranking_levels' => $election->ranking_levels,
                 'allow_write_in' => $election->allow_write_in,
                 'allow_abstain' => $election->allow_abstain,
-                'start_time' => $election->start_time->toIso8601String(),
-                'end_time' => $election->end_time->toIso8601String(),
+                'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                'start_timestamp' => $election->start_timestamp,
+                'end_timestamp' => $election->end_timestamp,
                 'status' => $election->status,
                 'current_status' => $election->current_status,
                 'has_voted' => $election->hasUserVoted($user),

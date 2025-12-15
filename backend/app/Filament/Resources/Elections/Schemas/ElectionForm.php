@@ -147,11 +147,15 @@ class ElectionForm
                         DateTimePicker::make('start_time')
                             ->label('Start Time')
                             ->required()
+                            ->displayFormat('M d, Y g:i A')
+                            ->timezone(config('app.timezone', 'America/Chicago'))
                             ->helperText('When the election voting period begins'),
 
                         DateTimePicker::make('end_time')
                             ->label('End Time')
                             ->required()
+                            ->displayFormat('M d, Y g:i A')
+                            ->timezone(config('app.timezone', 'America/Chicago'))
                             ->helperText('When the election voting period ends')
                             ->after('start_time'),
                     ])

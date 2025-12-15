@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/axios";
+import { setServerTime } from "@/lib/timeService";
 
 export type PublicElectionStatus = "Open" | "Upcoming" | "Closed" | "Active" | string;
 
@@ -12,6 +13,8 @@ export interface PublicElection {
   type: string;
   start_time: string | null;
   end_time: string | null;
+  start_timestamp: number | null; // Unix timestamp
+  end_timestamp: number | null;   // Unix timestamp
   status: string | null;
   current_status: PublicElectionStatus;
   positions_count: number;
@@ -24,6 +27,7 @@ export interface PublicElectionsResponseMeta {
   upcoming: number;
   closed: number;
   timestamp: string;
+  server_time: number; // Unix timestamp
 }
 
 export interface PublicElectionsResponse {
@@ -38,9 +42,13 @@ export function usePublicElections() {
     queryKey: ["public-elections"],
     queryFn: async () => {
       const response = await api.get<PublicElectionsResponse>("/students/public/elections");
-      return response.data;
+      const payload = response.data;
+      // Align client clock with authoritative server time when provided
+      setServerTime(payload?.meta?.server_time);
+      return payload;
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 30 * 1000, // 30 seconds - refresh frequently to catch status changes
+    refetchInterval: 60 * 1000, // Refetch every minute
     retry: 1,
   });
 }

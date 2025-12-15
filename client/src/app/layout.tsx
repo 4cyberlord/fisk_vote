@@ -1,23 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Roboto } from "next/font/google";
+import { Heebo } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Heebo font configuration - weight 500
+const heebo = Heebo({
+  weight: ["500"],
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-// Roboto font configuration - using multiple weights for flexibility
-const roboto = Roboto({
-  weight: ["300", "400", "500", "700"],
-  subsets: ["latin"],
-  variable: "--font-roboto",
+  variable: "--font-heebo",
   display: "swap", // Optimize font loading
 });
 
@@ -32,9 +22,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={roboto.className} suppressHydrationWarning>
+    <html lang="en" className={heebo.variable} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${roboto.variable} antialiased`}
+        className={`${heebo.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

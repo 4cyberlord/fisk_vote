@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useElectionResults } from "@/hooks/useElections";
-import dayjs from "dayjs";
+import dayjs from "@/lib/dayjs";
 import { motion } from "framer-motion";
 import {
   Trophy,

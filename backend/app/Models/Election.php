@@ -87,7 +87,7 @@ class Election extends Model
 
         // Check eligible groups
         $eligibleGroups = $this->eligible_groups ?? [];
-        
+
         // Check departments
         if (!empty($eligibleGroups['departments']) && is_array($eligibleGroups['departments'])) {
             if (in_array($user->department, $eligibleGroups['departments'])) {
@@ -136,27 +136,51 @@ class Election extends Model
 
     /**
      * Get the current status of the election (Open, Upcoming, Closed).
+     * Uses Unix timestamps for timezone-agnostic comparison.
      */
     public function getCurrentStatusAttribute(): string
     {
-        $now = now();
-        
         if ($this->status === 'closed' || $this->status === 'archived') {
             return 'Closed';
         }
 
-        if ($this->start_time > $now) {
+        // Use Unix timestamps for comparison - completely timezone-agnostic
+        $nowTimestamp = time();
+        $startTimestamp = $this->start_time ? $this->start_time->timestamp : null;
+        $endTimestamp = $this->end_time ? $this->end_time->timestamp : null;
+
+        // Check if election hasn't started yet
+        if ($startTimestamp && $startTimestamp > $nowTimestamp) {
             return 'Upcoming';
         }
 
-        if ($this->end_time < $now) {
+        // Check if election has ended
+        if ($endTimestamp && $endTimestamp < $nowTimestamp) {
             return 'Closed';
         }
 
-        if ($this->status === 'active' && $this->start_time <= $now && $this->end_time >= $now) {
+        // Check if election is currently open
+        if ($this->status === 'active' && $startTimestamp && $endTimestamp &&
+            $startTimestamp <= $nowTimestamp && $endTimestamp >= $nowTimestamp) {
             return 'Open';
         }
 
         return 'Closed';
+    }
+
+    /**
+     * Get start time as Unix timestamp
+     */
+    public function getStartTimestampAttribute(): ?int
+    {
+        return $this->start_time ? $this->start_time->timestamp : null;
+    }
+
+    /**
+     * Get end time as Unix timestamp
+     */
+    public function getEndTimestampAttribute(): ?int
+    {
+        return $this->end_time ? $this->end_time->timestamp : null;
     }
 }

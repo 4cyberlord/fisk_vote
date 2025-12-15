@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { useBallot, useCastVote } from "@/hooks/useElections";
 import { Button } from "@/components";
 import toast from "react-hot-toast";
-import dayjs from "dayjs";
+import { formatDate } from "@/lib/dayjs";
 import Avatar, { genConfig } from "react-nice-avatar";
 
 // Helper component to render candidate avatar
@@ -32,8 +32,6 @@ function CandidateAvatar({
   const [imageError, setImageError] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
-
   const avatarConfig = useMemo(() => {
     const seed =
       candidate.user?.email ||
@@ -47,25 +45,47 @@ function CandidateAvatar({
   }, [candidate]);
 
   // Helper to convert relative URLs to absolute URLs
-  const getImageUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    // If it's already an absolute URL (starts with http:// or https://), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "");
+
+  const rewriteLocalhost = (url: string): string => {
+    if (!backendBase) return url;
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        return url.replace(`${parsed.protocol}//${parsed.host}`, backendBase);
+      }
+    } catch {
+      // ignore parse errors
     }
-    // If it starts with /, prepend backend URL
-    if (url.startsWith('/')) {
-      return `${BACKEND_URL}${url}`;
-    }
-    // Otherwise, assume it's a relative path and prepend backend URL with /
-    return `${BACKEND_URL}/${url}`;
+    return url;
   };
 
-  // Determine which image to use (priority: candidate.photo_url > candidate.user.profile_photo)
+  const getImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    // Absolute URL: rewrite localhost to backendBase if provided
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return rewriteLocalhost(url);
+    }
+    // Protocol-relative
+    if (url.startsWith("//")) {
+      return `${window?.location?.protocol ?? "https:"}${url}`;
+    }
+    // Path starting with / -> prefix backend base if provided, else use as-is
+    if (url.startsWith("/")) {
+      if (backendBase) return `${backendBase}${url}`;
+      return url;
+    }
+    // Bare path -> prefix backend base if provided, else make it relative
+    if (backendBase) return `${backendBase}/${url.replace(/^\/+/, "")}`;
+    return `/${url.replace(/^\/+/, "")}`;
+  };
+
+  // Determine which image to use (priority: candidate upload > user profile photo)
   useEffect(() => {
+    // Use the candidate-specific photo uploaded in admin as the official election image.
     const photoUrl = candidate.photo_url ? getImageUrl(candidate.photo_url) : null;
     const profilePhoto = candidate.user?.profile_photo ? getImageUrl(candidate.user.profile_photo) : null;
-    
+
     setImageSrc(photoUrl || profilePhoto || null);
     setImageError(false);
   }, [candidate.photo_url, candidate.user?.profile_photo]);
@@ -407,8 +427,8 @@ export default function CastVotePage() {
                 />
               </svg>
               <span>
-                {dayjs(ballotData.election.start_time).format("MMM D, YYYY [at] h:mm A")} -{" "}
-                {dayjs(ballotData.election.end_time).format("MMM D, YYYY [at] h:mm A")}
+                {formatDate(ballotData.election.start_time)} -{" "}
+                {formatDate(ballotData.election.end_time)}
               </span>
             </div>
           </div>
@@ -506,53 +526,66 @@ function BallotPositionSection({
       </div>
 
       {position.type === "single" && (
-        <div className="space-y-3">
-          {position.candidates.map((candidate) => (
-            <label
-              key={candidate.id}
-              className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                value === candidate.id
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 hover:border-gray-300"
-              } ${abstain ? "opacity-50 pointer-events-none" : ""}`}
-            >
-              <input
-                type="radio"
-                name={`position_${position.id}`}
-                value={candidate.id}
-                checked={value === candidate.id}
-                onChange={() => onVoteChange(candidate.id)}
-                className="mt-1"
-                disabled={abstain}
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex-shrink-0">
-                    <CandidateAvatar candidate={candidate} size={40} />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">
-                      {candidate.user?.name ||
-                        (candidate.user?.first_name && candidate.user?.last_name
-                          ? `${candidate.user.first_name} ${candidate.user.last_name}`
-                          : "--")}
-                    </p>
-                    {candidate.tagline && (
-                      <p className="text-sm text-gray-600">{candidate.tagline}</p>
-                    )}
-                  </div>
+        <div className="space-y-2">
+          {position.candidates.map((candidate) => {
+            const isSelected = value === candidate.id;
+            return (
+              <label
+                key={candidate.id}
+                className={`group relative flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
+                  isSelected
+                    ? "border-indigo-500 bg-indigo-50/50"
+                    : "border-gray-200 hover:bg-gray-50"
+                } ${abstain ? "opacity-50 pointer-events-none" : ""}`}
+              >
+                <input
+                  type="radio"
+                  name={`position_${position.id}`}
+                  value={candidate.id}
+                  checked={isSelected}
+                  onChange={() => onVoteChange(candidate.id)}
+                  className="sr-only"
+                  disabled={abstain}
+                />
+                {/* Avatar with selection ring */}
+                <div className={`flex-shrink-0 rounded-full ${isSelected ? "ring-2 ring-indigo-500 ring-offset-2" : ""}`}>
+                  <CandidateAvatar candidate={candidate} size={52} />
                 </div>
-                {candidate.bio && (
-                  <p className="text-sm text-gray-600 line-clamp-2">{candidate.bio}</p>
-                )}
-              </div>
-            </label>
-          ))}
+                {/* Candidate info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900">
+                    {candidate.user?.name ||
+                      (candidate.user?.first_name && candidate.user?.last_name
+                        ? `${candidate.user.first_name} ${candidate.user.last_name}`
+                        : "--")}
+                  </p>
+                  {candidate.tagline && (
+                    <p className="text-sm text-gray-500 truncate">{candidate.tagline}</p>
+                  )}
+                  {candidate.bio && (
+                    <p className="text-sm text-gray-600 line-clamp-1 mt-1">{candidate.bio}</p>
+                  )}
+                </div>
+                {/* Selection indicator */}
+                <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                  isSelected
+                    ? "border-indigo-500 bg-indigo-500"
+                    : "border-gray-300 group-hover:border-gray-400"
+                }`}>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+              </label>
+            );
+          })}
         </div>
       )}
 
       {position.type === "multiple" && (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {position.candidates.map((candidate) => {
             const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
             const isSelected = selectedValues.includes(candidate.id);
@@ -560,10 +593,10 @@ function BallotPositionSection({
             return (
               <label
                 key={candidate.id}
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                className={`group relative flex items-center gap-4 p-4 rounded-lg cursor-pointer transition-all border ${
                   isSelected
-                    ? "border-indigo-500 bg-indigo-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-indigo-500 bg-indigo-50/50"
+                    : "border-gray-200 hover:bg-gray-50"
                 } ${abstain ? "opacity-50 pointer-events-none" : ""}`}
               >
                 <input
@@ -582,28 +615,38 @@ function BallotPositionSection({
                       onVoteChange(currentValues.filter((id) => id !== candidate.id));
                     }
                   }}
-                  className="mt-1"
+                  className="sr-only"
                   disabled={abstain}
                 />
-                <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="flex-shrink-0">
-                    <CandidateAvatar candidate={candidate} size={40} />
-                  </div>
-                  <div>
-                      <p className="font-medium text-gray-900">
-                        {candidate.user?.name ||
-                          (candidate.user?.first_name && candidate.user?.last_name
-                            ? `${candidate.user.first_name} ${candidate.user.last_name}`
-                            : "--")}
-                      </p>
-                      {candidate.tagline && (
-                        <p className="text-sm text-gray-600">{candidate.tagline}</p>
-                      )}
-                    </div>
-                  </div>
+                {/* Avatar with selection ring */}
+                <div className={`flex-shrink-0 rounded-full ${isSelected ? "ring-2 ring-indigo-500 ring-offset-2" : ""}`}>
+                  <CandidateAvatar candidate={candidate} size={52} />
+                </div>
+                {/* Candidate info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900">
+                    {candidate.user?.name ||
+                      (candidate.user?.first_name && candidate.user?.last_name
+                        ? `${candidate.user.first_name} ${candidate.user.last_name}`
+                        : "--")}
+                  </p>
+                  {candidate.tagline && (
+                    <p className="text-sm text-gray-500 truncate">{candidate.tagline}</p>
+                  )}
                   {candidate.bio && (
-                    <p className="text-sm text-gray-600 line-clamp-2">{candidate.bio}</p>
+                    <p className="text-sm text-gray-600 line-clamp-1 mt-1">{candidate.bio}</p>
+                  )}
+                </div>
+                {/* Selection indicator - rounded square for multiple */}
+                <div className={`flex-shrink-0 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
+                  isSelected
+                    ? "border-indigo-500 bg-indigo-500"
+                    : "border-gray-300 group-hover:border-gray-400"
+                }`}>
+                  {isSelected && (
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                   )}
                 </div>
               </label>
@@ -623,15 +666,30 @@ function BallotPositionSection({
       )}
 
       {position.allow_abstain && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
-          <label className="flex items-center gap-3 cursor-pointer">
+        <div className="mt-5 pt-4 border-t border-gray-100">
+          <label className={`group flex items-center gap-3 py-2 cursor-pointer transition-all rounded-md px-2 ${
+            abstain ? "bg-gray-50" : "hover:bg-gray-50"
+          }`}>
             <input
               type="checkbox"
               checked={abstain}
               onChange={(e) => onAbstainChange(e.target.checked)}
-              className="rounded"
+              className="sr-only"
             />
-            <span className="text-sm text-gray-700">
+            <span
+              className={`flex h-5 w-5 items-center justify-center rounded border-2 transition-all ${
+                abstain
+                  ? "border-gray-500 bg-gray-500"
+                  : "border-gray-300 group-hover:border-gray-400"
+              }`}
+            >
+              {abstain && (
+                <svg className="h-3 w-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </span>
+            <span className={`text-sm ${abstain ? "text-gray-700 font-medium" : "text-gray-600"}`}>
               Abstain from voting for this position
             </span>
           </label>

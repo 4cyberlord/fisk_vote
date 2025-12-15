@@ -11,6 +11,8 @@ export interface Election {
   allow_abstain: boolean;
   start_time: string;
   end_time: string;
+  start_timestamp: number | null; // Unix timestamp for accurate timezone-agnostic comparison
+  end_timestamp: number | null;   // Unix timestamp for accurate timezone-agnostic comparison
   status?: string; // Added for all elections endpoint
   current_status: string;
   has_voted: boolean;
@@ -62,6 +64,7 @@ export interface ActiveElectionsResponse {
   meta: {
     total: number;
     timestamp: string;
+    server_time?: number;
   };
 }
 
@@ -72,6 +75,7 @@ export interface AllElectionsResponse {
   meta: {
     total: number;
     timestamp: string;
+    server_time?: number;
   };
 }
 
@@ -79,6 +83,10 @@ export interface ElectionDetailResponse {
   success: boolean;
   message: string;
   data: ElectionDetail;
+  meta?: {
+    server_time?: number;
+    timestamp?: string;
+  };
 }
 
 class ElectionService {

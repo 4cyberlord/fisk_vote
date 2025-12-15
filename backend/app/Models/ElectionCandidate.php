@@ -48,14 +48,16 @@ class ElectionCandidate extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         // Single-file collection for candidate photo
+        // Use 'public' disk so images are publicly accessible via storage link
         $this->addMediaCollection('photo')
+            ->useDisk('public')
             ->singleFile();
     }
 
     /**
      * Register media conversions (e.g. thumbnails).
      */
-    public function registerMediaConversions(Media $media = null): void
+    public function registerMediaConversions(?Media $media = null): void
     {
         $this
             ->addMediaConversion('thumb')
@@ -69,7 +71,9 @@ class ElectionCandidate extends Model implements HasMedia
      * Accessor to keep using `photo_url` seamlessly with media library.
      *
      * - If the column has a value, return it (backwards compatible).
-     * - Otherwise, return the first media URL from the `photo` collection.
+     * - Otherwise, return the URL from the `photo` media collection.
+     * - For private disk (legacy), uses signed temporary URLs.
+     * - For public disk, uses direct URLs accessible via storage link.
      */
     public function getPhotoUrlAttribute($value): ?string
     {
@@ -92,17 +96,40 @@ class ElectionCandidate extends Model implements HasMedia
             return null;
         }
 
-        // Prefer the thumbnail conversion if it exists, otherwise the original
-        $url = $media->hasGeneratedConversion('thumb')
-            ? $media->getUrl('thumb')
-            : $media->getUrl();
-        
-        // Ensure we return a full URL
-        if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
-            return url($url);
+        try {
+            $conversionName = $media->hasGeneratedConversion('thumb') ? 'thumb' : '';
+
+            // For private/local disk (legacy uploads), use signed temporary URLs
+            if ($media->disk === 'local') {
+                return $media->getTemporaryUrl(
+                    now()->addHours(24),
+                    $conversionName ?: ''
+                );
+            }
+
+            // For public disk, use regular URL (accessible via storage:link)
+            $url = $conversionName
+                ? $media->getUrl($conversionName)
+                : $media->getUrl();
+
+            // Ensure we return a full URL
+            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                return url($url);
+            }
+
+            return $url;
+        } catch (\Exception $e) {
+            // Fallback to regular URL if temporary URL generation fails
+            $url = $media->hasGeneratedConversion('thumb')
+                ? $media->getUrl('thumb')
+                : $media->getUrl();
+
+            if ($url && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                return url($url);
+            }
+
+            return $url;
         }
-        
-        return $url;
     }
 
     /**

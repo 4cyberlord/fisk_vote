@@ -46,8 +46,8 @@ class StudentVoteController extends Controller
                         'description' => $election->description,
                         'type' => $election->type,
                         'current_status' => $election->current_status,
-                        'start_time' => optional($election->start_time)->toIso8601String(),
-                        'end_time' => optional($election->end_time)->toIso8601String(),
+                        'start_time' => optional($election->start_time)?->format('Y-m-d H:i:s'),
+                        'end_time' => optional($election->end_time)?->format('Y-m-d H:i:s'),
                     ],
                     'voted_at' => optional($vote->voted_at)->toIso8601String(),
                     'vote_data' => $vote->vote_data,
@@ -227,6 +227,9 @@ class StudentVoteController extends Controller
                     'vote_data' => $storedVoteData,
                     'voted_at' => now(),
                 ]);
+                
+                // Reload relationships for observer
+                $vote->load(['voter', 'election']);
 
                 DB::commit();
 
@@ -542,8 +545,8 @@ class StudentVoteController extends Controller
                         'description' => $election->description,
                         'type' => $election->type,
                         'current_status' => $election->current_status,
-                        'start_time' => $election->start_time->toIso8601String(),
-                        'end_time' => $election->end_time->toIso8601String(),
+                        'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                        'end_time' => $election->end_time->format('Y-m-d H:i:s'),
                     ],
                     'positions' => $positionsData,
                     'has_voted' => $hasVoted,

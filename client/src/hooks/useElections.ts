@@ -1,18 +1,19 @@
       "use client";
 
       import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-      import {
-        electionService,
-        Election,
-        ElectionDetail,
-        voteService,
-        CastVoteRequest,
-        MyVotesResponse,
-        analyticsService,
-        AnalyticsData,
-        resultsService,
-        ElectionResult,
-      } from "@/services/electionService";
+import {
+  electionService,
+  Election,
+  ElectionDetail,
+  voteService,
+  CastVoteRequest,
+  MyVotesResponse,
+  analyticsService,
+  AnalyticsData,
+  resultsService,
+  ElectionResult,
+} from "@/services/electionService";
+import { setServerTime } from "@/lib/timeService";
 
 /**
  * Hook to get all elections (active or not)
@@ -22,9 +23,11 @@ export function useAllElections() {
     queryKey: ["elections", "all"],
     queryFn: async () => {
       const response = await electionService.getAllElections();
+      setServerTime(response.meta?.server_time);
       return response.data; // Returns Election[]
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - elections don't change frequently
+    staleTime: 30 * 1000, // 30 seconds - refresh frequently to catch status changes
+    refetchInterval: 60 * 1000, // Refetch every minute to catch when elections open/close
     retry: 1,
   });
 }
@@ -37,9 +40,11 @@ export function useActiveElections() {
     queryKey: ["elections", "active"],
     queryFn: async () => {
       const response = await electionService.getActiveElections();
+      setServerTime(response.meta?.server_time);
       return response.data; // Returns Election[]
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - elections don't change frequently
+    staleTime: 15 * 1000, // 15 seconds - refresh very frequently to catch status changes
+    refetchInterval: 30 * 1000, // Refetch every 30 seconds to catch when elections open
     retry: 1,
   });
 }
@@ -53,6 +58,7 @@ export function useActiveElections() {
           queryFn: async () => {
             if (!id) return null;
             const response = await electionService.getElection(id);
+      setServerTime(response.meta?.server_time);
             return response.data; // Returns ElectionDetail
           },
           enabled: !!id, // Only run if id is provided
@@ -70,6 +76,9 @@ export function useActiveElections() {
           queryFn: async () => {
             if (!electionId) return null;
             const response = await voteService.getBallot(electionId);
+      // Ballot responses may carry server_time in meta if added later; defensive set
+      // @ts-expect-error meta may exist depending on backend response
+      setServerTime(response.meta?.server_time);
             return response.data; // Returns BallotData
           },
           enabled: !!electionId,
