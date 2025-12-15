@@ -51,8 +51,9 @@ class NotificationController extends Controller
                 ];
             }),
             'meta' => [
-                'unread_count' => Notification::forUser($user->id)->unread()->urgent()->count(),
-                'total_unread' => Notification::forUser($user->id)->unread()->count(),
+                // Align field names with unreadCount() endpoint semantics
+                'urgent_count' => Notification::forUser($user->id)->unread()->urgent()->count(),
+                'total_count' => Notification::forUser($user->id)->unread()->count(),
             ],
         ]);
     }
