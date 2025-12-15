@@ -11,6 +11,16 @@ class Election extends Model
     use HasFactory;
 
     /**
+     * Extra attributes to append on JSON/array serialization.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'start_timestamp',
+        'end_timestamp',
+    ];
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
