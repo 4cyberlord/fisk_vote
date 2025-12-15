@@ -97,13 +97,14 @@ class ElectionCandidate extends Model implements HasMedia
         }
 
         try {
-            $conversionName = $media->hasGeneratedConversion('thumb') ? 'thumb' : '';
+            // Use null when no conversion exists to avoid empty-string issues
+            $conversionName = $media->hasGeneratedConversion('thumb') ? 'thumb' : null;
 
             // For private/local disk (legacy uploads), use signed temporary URLs
             if ($media->disk === 'local') {
                 return $media->getTemporaryUrl(
                     now()->addHours(24),
-                    $conversionName ?: ''
+                    $conversionName
                 );
             }
 

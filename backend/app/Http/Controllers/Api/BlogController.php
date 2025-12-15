@@ -159,7 +159,8 @@ class BlogController extends Controller
     public function related(Request $request, $id): AnonymousResourceCollection
     {
         $limit = $request->get('limit', 3);
-        $post = BlogPost::findOrFail($id);
+        // Align with show(): only allow published source posts
+        $post = BlogPost::published()->findOrFail($id);
 
         $relatedPosts = BlogPost::with(['category', 'author'])
             ->published()
