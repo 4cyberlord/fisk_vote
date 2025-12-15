@@ -33,7 +33,7 @@ class ParticipationRateWidget extends BaseWidget
                 });
             })
             ->whereYear('start_time', '>=', $currentYear - 1) // Only elections from current year or last year
-            ->orderBy('start_time', 'desc') // Most recent first
+            ->orderBy('start_time', 'asc') // Nearest upcoming / current first
             ->limit(3)
             ->get();
 
@@ -48,9 +48,9 @@ class ParticipationRateWidget extends BaseWidget
                 })->count();
 
                 $votesCast = Vote::where('election_id', $election->id)->distinct('voter_id')->count('voter_id');
-                
-                $participationRate = $totalEligible > 0 
-                    ? round(($votesCast / $totalEligible) * 100, 1) 
+
+                $participationRate = $totalEligible > 0
+                    ? round(($votesCast / $totalEligible) * 100, 1)
                     : 0;
 
                 $title = strlen($election->title) > 25 ? substr($election->title, 0, 25) . '...' : $election->title;
@@ -65,8 +65,8 @@ class ParticipationRateWidget extends BaseWidget
         // If no active elections or less than 3, show overall participation
         if (count($stats) < 3) {
             $totalVotes = Vote::distinct('voter_id')->count('voter_id');
-            $overallRate = $totalStudents > 0 
-                ? round(($totalVotes / $totalStudents) * 100, 1) 
+            $overallRate = $totalStudents > 0
+                ? round(($totalVotes / $totalStudents) * 100, 1)
                 : 0;
 
             $stats[] = Stat::make('Overall Participation', "{$overallRate}%")
