@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Students\StudentAnalyticsController;
 use App\Http\Controllers\Api\Students\StudentAuditLogController;
 use App\Http\Controllers\Api\Students\StudentSessionController;
 use App\Http\Controllers\Api\Students\StudentCalendarController;
+use App\Http\Controllers\Api\Students\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -147,6 +148,16 @@ Route::prefix('students')->group(function () {
 
         Route::post('/elections/{id}/vote', [StudentVoteController::class, 'castVote'])
             ->name('api.v1.students.elections.vote');
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index'])
+            ->name('api.v1.students.notifications.index');
+        Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])
+            ->name('api.v1.students.notifications.unread-count');
+        Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])
+            ->name('api.v1.students.notifications.mark-read');
+        Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])
+            ->name('api.v1.students.notifications.mark-all-read');
 
         // Future protected endpoints can be added here:
         // Route::get('/profile', [StudentProfileController::class, 'show']);

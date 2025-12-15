@@ -207,7 +207,7 @@ class StudentAuthController extends Controller
             $token = JWTAuth::getToken();
 
             $user = auth('api')->user();
-            
+
             if ($token) {
                 // Remove session from database
                 try {
@@ -335,6 +335,9 @@ class StudentAuthController extends Controller
                 'email' => $user->email,
             ]);
 
+            // Get user organizations
+            $organizations = $user->organizations ?? [];
+
             return response()->json([
                 'success' => true,
                 'message' => 'User data retrieved successfully.',
@@ -345,13 +348,13 @@ class StudentAuthController extends Controller
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
                     'middle_initial' => $user->middle_initial,
-                    
+
                     // Email Information
                     'email' => $user->email,
                     'university_email' => $user->university_email,
                     'personal_email' => $user->personal_email,
                     'email_verified_at' => $user->email_verified_at?->toIso8601String(),
-                    
+
                     // Student Information
                     'student_id' => $user->student_id,
                     'department' => $user->department,
@@ -360,16 +363,17 @@ class StudentAuthController extends Controller
                     'enrollment_status' => $user->enrollment_status,
                     'student_type' => $user->student_type,
                     'citizenship_status' => $user->citizenship_status,
-                    
+
                     // Contact Information
                     'phone_number' => $user->phone_number,
                     'address' => $user->address,
-                    
+
                     // Profile Information
                     'profile_photo' => $user->profile_photo,
-                    
+
                     // Account Information
                     'roles' => $roles,
+                    'organizations' => $organizations,
                     'created_at' => $user->created_at?->toIso8601String(),
                     'updated_at' => $user->updated_at?->toIso8601String(),
                 ],

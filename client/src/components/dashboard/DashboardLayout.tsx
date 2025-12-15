@@ -2,12 +2,23 @@
 
 import { Logo } from "@/components";
 import { useAuth, useLogout, useCurrentUser } from "@/hooks/useAuth";
+import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead } from "@/hooks/useNotifications";
 import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Avatar, { genConfig } from "react-nice-avatar";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { User, Settings, LogOut, ChevronDown, Search } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, Search, Bell, Clock, CheckCircle, AlertCircle, Calendar, X } from "lucide-react";
+
+// Helper to resolve image URLs (handles relative paths from backend)
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
+function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return `${BACKEND_URL}${url}`;
+  return `${BACKEND_URL}/${url}`;
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -21,6 +32,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  
+  // Fetch notifications from API
+  const { data: notificationsData, isLoading: notificationsLoading } = useNotifications({ unread_only: false });
+  const { data: unreadCountData } = useUnreadCount();
+  const markAsReadMutation = useMarkAsRead();
+  const markAllAsReadMutation = useMarkAllAsRead();
+
+  const notifications = notificationsData?.data || [];
+  const unreadCount = unreadCountData?.data?.urgent_count || 0;
 
   // Get user from API response or fallback to store user
   const apiUser = currentUserData?.data;
@@ -95,8 +116,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Map icon strings to Lucide icons
+  const getIcon = (iconName: string) => {
+    const iconMap: Record<string, typeof Bell> = {
+      'bell': Bell,
+      'clock': Clock,
+      'alert-circle': AlertCircle,
+      'check-circle': CheckCircle,
+      'award': Calendar,
+    };
+    return iconMap[iconName] || Bell;
+  };
+
+  // Filter unread notifications
+  const unreadNotifications = notifications.filter((n) => !n.is_read);
+
+  // Mark notification as read
+  const handleMarkAsRead = (notificationId: number) => {
+    markAsReadMutation.mutate(notificationId);
+  };
+
+  // Mark all notifications as read
+  const handleMarkAllAsRead = () => {
+    markAllAsReadMutation.mutate();
+  };
+
   return (
-    <div className="h-screen bg-white flex overflow-hidden">
+    <div className="h-screen bg-white flex overflow-hidden dashboard-container">
       {/* SIDEBAR */}
       <aside className="w-64 bg-[#0f172a] text-gray-300 flex flex-col">
         {/* Logo */}
@@ -355,12 +401,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="h-16 border-b border-gray-200 bg-white flex items-center px-6 gap-6 relative">
           {/* Centered search bar */}
           <div className="absolute inset-x-0 flex justify-center pointer-events-none">
-            <div className="w-full max-w-md px-16 pointer-events-auto">
+            <div className="w-full max-w-2xl px-16 pointer-events-auto">
               <label htmlFor="dashboard-search" className="sr-only">
                 Search
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
                 <input
                   id="dashboard-search"
                   type="search"
@@ -371,7 +417,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     if (!isCommandOpen) setIsCommandOpen(true);
                   }}
                   onFocus={() => setIsCommandOpen(true)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400 text-gray-900"
+                  className="w-full pl-12 pr-4 py-3 text-base border border-gray-200 rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400 text-gray-900"
                 />
               </div>
             </div>
@@ -379,22 +425,127 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Right side: bell + user menu */}
           <div className="flex items-center gap-6 ml-auto">
-            {/* Bell Icon */}
-            <button className="relative">
-              <svg
-                className="h-6 w-6 text-gray-600"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
+            {/* Notification Bell */}
+            <div className="relative">
+              <button
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11c0-3.3-2-6-6-6S6 7.7 6 11v3c0 .8-.3 1.6-.9 2.2L4 17h5m3 4a2 2 0 002-2H10a2 2 0 002 2z"
-                />
-              </svg>
-            </button>
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notification Dropdown */}
+              {isNotificationOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsNotificationOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[600px] flex flex-col">
+                    <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                        {unreadCount > 0 && (
+                          <p className="text-xs text-gray-500 mt-0.5">
+                            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={() => {
+                              handleMarkAllAsRead();
+                            }}
+                            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+                            disabled={markAllAsReadMutation.isPending}
+                          >
+                            {markAllAsReadMutation.isPending ? 'Marking...' : 'Mark all read'}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setIsNotificationOpen(false)}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-y-auto flex-1">
+                      {unreadNotifications.length === 0 ? (
+                        <div className="px-5 py-12 text-center">
+                          <Bell className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                          <p className="text-sm font-medium text-gray-900 mb-1">No new notifications</p>
+                          <p className="text-xs text-gray-500">
+                            You're all caught up! We'll notify you about new elections and important updates.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-gray-100">
+                          {unreadNotifications.map((notification) => {
+                            const Icon = getIcon(notification.icon);
+                            const href = notification.href || '/dashboard';
+                            return (
+                              <Link
+                                key={notification.id}
+                                href={href}
+                                onClick={() => {
+                                  if (!notification.is_read) {
+                                    handleMarkAsRead(notification.id);
+                                  }
+                                  setIsNotificationOpen(false);
+                                }}
+                                className={`block px-5 py-4 hover:bg-gray-50 transition-colors relative ${
+                                  notification.urgent && !notification.is_read ? 'bg-red-50/50' : ''
+                                } ${notification.is_read ? 'opacity-60' : ''}`}
+                              >
+                                {!notification.is_read && (
+                                  <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 bg-indigo-600 rounded-full" />
+                                )}
+                                <div className="flex items-start gap-3">
+                                  <div className={`flex-shrink-0 ${notification.color} ${notification.is_read ? 'opacity-50' : ''}`}>
+                                    <Icon className="h-5 w-5" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 pl-2">
+                                    <div className="flex items-start justify-between gap-2">
+                                      <p className={`text-sm font-semibold ${notification.is_read ? 'text-gray-500' : 'text-gray-900'}`}>
+                                        {notification.title}
+                                      </p>
+                                      <span className="text-xs text-gray-400 whitespace-nowrap">
+                                        {notification.time}
+                                      </span>
+                                    </div>
+                                    <p className={`text-xs mt-1 line-clamp-2 ${notification.is_read ? 'text-gray-400' : 'text-gray-600'}`}>
+                                      {notification.message}
+                                    </p>
+                                  </div>
+                                </div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {unreadNotifications.length > 0 && (
+                      <div className="px-5 py-3 border-t border-gray-100">
+                        <Link
+                          href="/dashboard/elections"
+                          onClick={() => setIsNotificationOpen(false)}
+                          className="text-xs font-medium text-indigo-600 hover:text-indigo-700 text-center block"
+                        >
+                          View all elections →
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* User Menu */}
             <DropdownMenuPrimitive.Root>
@@ -409,7 +560,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     ) : (user as { profile_photo?: string | null })?.profile_photo ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={(user as { profile_photo?: string | null }).profile_photo ?? ""}
+                        src={getImageUrl((user as { profile_photo?: string | null }).profile_photo) ?? ""}
                         alt={getDisplayName()}
                         className="h-9 w-9 object-cover"
                         loading="lazy"
@@ -495,7 +646,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   Esc
                 </button>
               </div>
-              <div className="max-h-96 overflow-y-auto">
+              <div className="max-h-96 overflow-y-auto command-palette-scrollbar">
                 {filteredCommands.length === 0 ? (
                   <div className="px-4 py-6 text-center text-sm text-gray-500">
                     No matches found for <span className="font-semibold">“{commandQuery}”</span>

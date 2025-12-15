@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useAllResults } from "@/hooks/useElections";
 import Link from "next/link";
-import dayjs from "dayjs";
+import { formatDate } from "@/lib/dayjs";
 import { motion } from "framer-motion";
 import { Trophy, Calendar, Users, ArrowRight } from "lucide-react";
 import { Pagination } from "@/components";
@@ -111,7 +111,7 @@ export default function ResultsPage() {
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>
-                              Ended {dayjs(election.end_time).format("MMM D, YYYY")}
+                              Ended {formatDate(election.end_time, "MMM d, yyyy")}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">

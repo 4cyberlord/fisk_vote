@@ -2,19 +2,17 @@
 
 import { useParams } from "next/navigation";
 import { useElection } from "@/hooks/useElections";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import duration from "dayjs/plugin/duration";
+import { formatDate } from "@/lib/dateUtils";
 import { PositionSection } from "@/components/elections/PositionSection";
-
-// Extend dayjs with plugins
-dayjs.extend(relativeTime);
-dayjs.extend(duration);
+import { useServerTime } from "@/hooks/useServerTime";
 
 export default function ElectionDetailPage() {
   const params = useParams();
   const electionId = params?.id ? parseInt(params.id as string) : null;
   const { data: election, isLoading, error } = useElection(electionId);
+  
+  // Use Nashville server time for accurate status
+  const { getElectionStatus, getElectionTimeRemaining } = useServerTime();
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -40,25 +38,18 @@ export default function ElectionDetailPage() {
     return labels[type] || type;
   };
 
-  const getTimeRemaining = () => {
-    if (!election) return null;
-    if (election.current_status !== "Open") return null;
-
-    const endTime = dayjs(election.end_time);
-    const now = dayjs();
-    const diff = endTime.diff(now);
-
-    if (diff <= 0) return "Ended";
-
-    const duration = dayjs.duration(diff);
-    const days = duration.days();
-    const hours = duration.hours();
-    const minutes = duration.minutes();
-
-    if (days > 0) return `${days} day${days > 1 ? "s" : ""} remaining`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? "s" : ""} remaining`;
-    return `${minutes} minute${minutes > 1 ? "s" : ""} remaining`;
-  };
+  // Calculate status using Nashville server time (from World Time API)
+  const liveStatus = election 
+    ? getElectionStatus(election.start_timestamp, election.end_timestamp, election.status)
+    : null;
+  
+  // Use live status for display, fallback to backend status
+  const displayStatus = liveStatus || election?.current_status || "Closed";
+  
+  // Get time remaining using Nashville server time
+  const timeRemaining = displayStatus === "Open" 
+    ? getElectionTimeRemaining(election?.end_timestamp)
+    : null;
 
   // Loading State
   if (isLoading) {
@@ -129,8 +120,6 @@ export default function ElectionDetailPage() {
     );
   }
 
-  const timeRemaining = getTimeRemaining();
-
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -168,10 +157,10 @@ export default function ElectionDetailPage() {
                   </h1>
                   <span
                     className={`px-4 py-1 rounded-full text-sm font-medium border ${getStatusBadgeColor(
-                      election.current_status
+                      displayStatus
                     )}`}
                   >
-                    {election.current_status}
+                    {displayStatus}
                   </span>
                   {election.has_voted && (
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
@@ -206,9 +195,7 @@ export default function ElectionDetailPage() {
                   Start Date
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {election.start_time
-                    ? dayjs(election.start_time).format("MMM D, YYYY [at] h:mm A")
-                    : "--"}
+                  {formatDate(election.start_timestamp || election.start_time)}
                 </p>
               </div>
               <div>
@@ -216,9 +203,7 @@ export default function ElectionDetailPage() {
                   End Date
                 </p>
                 <p className="text-sm font-semibold text-gray-900">
-                  {election.end_time
-                    ? dayjs(election.end_time).format("MMM D, YYYY [at] h:mm A")
-                    : "--"}
+                  {formatDate(election.end_timestamp || election.end_time)}
                 </p>
               </div>
               <div>
@@ -334,7 +319,7 @@ export default function ElectionDetailPage() {
         )}
 
         {/* Voting Section (Placeholder for future implementation) */}
-        {election.current_status === "Open" && !election.has_voted && (
+        {displayStatus === "Open" && !election.has_voted && (
           <div className="mt-8 bg-indigo-50 border border-indigo-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
               <div>

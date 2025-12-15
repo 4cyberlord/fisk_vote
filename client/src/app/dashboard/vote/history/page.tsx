@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMyVotes } from "@/hooks/useElections";
-import dayjs from "dayjs";
+import { formatDate } from "@/lib/dayjs";
 import Link from "next/link";
 import {
   ColumnDef,
@@ -110,10 +110,10 @@ function VotesTable({ votes }: { votes: VoteEntry[] }) {
         cell: ({ row }) => (
           <div>
             <p className="text-sm text-gray-900">
-              {dayjs(row.original.voted_at).format("MMM D, YYYY")}
+              {formatDate(row.original.voted_at, "MMM d, yyyy")}
             </p>
             <p className="text-xs text-gray-500">
-              {dayjs(row.original.voted_at).format("h:mm A")}
+              {formatDate(row.original.voted_at, "h:mm A")}
             </p>
           </div>
         ),
@@ -384,7 +384,7 @@ export default function VoteHistoryPage() {
                     <p className="text-xs text-gray-500 mt-2">
                       Voted on{" "}
                       {entry.voted_at
-                        ? dayjs(entry.voted_at).format("MMM D, YYYY [at] h:mm A")
+                        ? formatDate(entry.voted_at)
                         : "--"}
                     </p>
                   </div>

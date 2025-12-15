@@ -1,43 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components";
 import { PublicHeader } from "@/components/layout/PublicHeader";
 import { PublicFooter } from "@/components/layout/PublicFooter";
+import { useNextElectionCountdown } from "@/hooks/useNextElection";
+import { formatDate } from "@/lib/dateUtils";
 
 export default function HomePage() {
   const { isAuthenticated } = useAuth();
+  const { nextElection, countdown, state, isLoading } = useNextElectionCountdown();
 
-  const [countdown, setCountdown] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
-  });
-
-  // Simple countdown to a sample flagship election date
-  useEffect(() => {
-    const target = new Date("2026-03-15T17:00:00Z").getTime();
-
-    const updateCountdown = () => {
-      const now = Date.now();
-      const diff = Math.max(target - now, 0);
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-
-      setCountdown({ days, hours, minutes, seconds });
-    };
-
-    updateCountdown();
-    const intervalId = window.setInterval(updateCountdown, 1000);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
+  const hasUpcoming = state === "upcoming" && nextElection;
 
   // Home page is public - no automatic redirects
   // Authenticated users can manually navigate to dashboard via the button
@@ -86,33 +61,53 @@ export default function HomePage() {
                   <div className="text-xs font-semibold text-slate-200 uppercase tracking-[0.18em]">
                     Next major election
                   </div>
-                  <div className="flex items-center gap-4 text-center">
-                    <div>
-                      <p className="text-2xl font-bold tabular-nums">
-                        {countdown.days.toString().padStart(2, "0")}
-                      </p>
-                      <p className="text-[10px] text-slate-200">DAYS</p>
+                  {isLoading && (
+                    <div className="text-xs text-slate-200/80">Loading next election…</div>
+                  )}
+                  {!isLoading && hasUpcoming && (
+                    <div className="flex items-center gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-bold tabular-nums">
+                          {countdown.days.toString().padStart(2, "0")}
+                        </p>
+                        <p className="text-[10px] text-slate-200">DAYS</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tabular-nums">
+                          {countdown.hours.toString().padStart(2, "0")}
+                        </p>
+                        <p className="text-[10px] text-slate-200">HOURS</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tabular-nums">
+                          {countdown.minutes.toString().padStart(2, "0")}
+                        </p>
+                        <p className="text-[10px] text-slate-200">MINUTES</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold tabular-nums">
+                          {countdown.seconds.toString().padStart(2, "0")}
+                        </p>
+                        <p className="text-[10px] text-slate-200">SECONDS</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold tabular-nums">
-                        {countdown.hours.toString().padStart(2, "0")}
-                      </p>
-                      <p className="text-[10px] text-slate-200">HOURS</p>
+                  )}
+                  {!isLoading && !hasUpcoming && (
+                    <div className="text-xs text-slate-200/80">
+                      No upcoming elections scheduled yet.
                     </div>
-                    <div>
-                      <p className="text-2xl font-bold tabular-nums">
-                        {countdown.minutes.toString().padStart(2, "0")}
-                      </p>
-                      <p className="text-[10px] text-slate-200">MINUTES</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold tabular-nums">
-                        {countdown.seconds.toString().padStart(2, "0")}
-                      </p>
-                      <p className="text-[10px] text-slate-200">SECONDS</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
+                {hasUpcoming && (
+                  <p className="mt-2 text-xs sm:text-sm text-slate-200/90">
+                    {nextElection?.title
+                      ? `${nextElection.title} · ${formatDate(
+                          nextElection.start_timestamp || nextElection.start_time,
+                          "MMM d, yyyy · h:mm a"
+                        )}`
+                      : "Stay tuned for the next election"}
+                  </p>
+                )}
 
                 {/* Auth CTAs */}
                 {isAuthenticated ? (
@@ -387,7 +382,7 @@ export default function HomePage() {
               <div className="relative order-2 md:order-1">
                 <div className="absolute top-0 left-0 bg-indigo-100 h-16 w-16 sm:h-20 sm:w-20 rounded-xl opacity-50" />
                 <img
-                  src="https://scontent-atl3-3.xx.fbcdn.net/v/t51.82787-15/581378374_18348505132202468_6757247636070272542_n.jpg?stp=c238.0.964.964a_dst-jpg_s552x414_tt6&_nc_cat=107&ccb=1-7&_nc_sid=714c7a&_nc_ohc=xhT5A4s2ip4Q7kNvwH1_bHC&_nc_oc=Adm3eitd8VyiqSt4Dtv181XBRirGdJeCZLlCB4ATHoZsxIoYe8wUD7EcPjY3XFbTkCM&_nc_zt=23&_nc_ht=scontent-atl3-3.xx&_nc_gid=YyxIeIktWaAe6-PSdDehUg&oh=00_Afh2__fuOxDgK-wZf_CLv2Z6wS3JaF9zDSjrohB-Fppp6g&oe=69336F47"
+                  src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80"
                   className="rounded-2xl shadow-xl relative z-10 h-[260px] sm:h-[320px] object-cover w-full"
                   alt="Students in discussion"
                 />
@@ -443,7 +438,7 @@ export default function HomePage() {
               {/* Left big campaign card */}
               <div className="relative rounded-2xl overflow-hidden shadow-xl group">
                 <img
-                  src="https://scontent-atl3-1.xx.fbcdn.net/v/t51.82787-15/580344703_18347975473202468_409152004408685724_n.jpg?stp=c0.89.1080.1080a_dst-jpg_s552x414_tt6&_nc_cat=106&ccb=1-7&_nc_sid=714c7a&_nc_ohc=n5m7CUpFF9IQ7kNvwGay9WI&_nc_oc=AdmQfYA_z5Ej_994NmwA4WV9Udp2lEtCM7VbzBwp11odG-T2b_0cXUXkgqE1ndIjLX0&_nc_zt=23&_nc_ht=scontent-atl3-1.xx&_nc_gid=HU_ySXNQweH89SBSt4XvNg&oh=00_Afg1JutvLFn2AI0IwnIvDQWGFj2nZb3Q_8UBkGKj-EkeVw&oe=69338F2C"
+                  src="https://images.pexels.com/photos/30542136/pexels-photo-30542136.jpeg?auto=compress&cs=tinysrgb&w=1200"
                   className="w-full h-[420px] sm:h-[480px] md:h-[520px] object-cover"
                   alt="Students gathered for a campus election event"
                 />
@@ -714,7 +709,7 @@ export default function HomePage() {
               {/* Left image */}
               <div className="relative">
                 <img
-                  src="https://scontent-atl3-2.xx.fbcdn.net/v/t39.30808-6/492493109_1239514321509711_8015303192593403809_n.jpg?_nc_cat=102&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=iP0bTJa_7TgQ7kNvwGOVlBc&_nc_oc=AdnUa8NlJp3w3OejyvRb-kXQU7hniIN6DHpDbOih9Zc1EA0uGfvzZte_9rM0H_l-vz4&_nc_zt=23&_nc_ht=scontent-atl3-2.xx&_nc_gid=sioZJFrAnvCFUPrJWbw_9w&oh=00_AfjNHkYTA68PtoZT1jKO8jWZimBBKBuWxoZwGHr6Uz-GfQ&oe=6933844C"
+                  src="https://images.pexels.com/photos/15953878/pexels-photo-15953878.jpeg?auto=compress&cs=tinysrgb&w=1200"
                   className="w-full rounded-2xl shadow-xl object-cover h-[260px] sm:h-[320px] md:h-[360px]"
                   alt="Students attending a campus event"
                 />

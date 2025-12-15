@@ -2,11 +2,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 export function PublicHeader() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, checkAuth, token, user } = useAuth();
   const pathname = usePathname();
+
+  // Validate authentication when navigating to different pages
+  useEffect(() => {
+    // Only validate if we think we're authenticated (to avoid unnecessary checks)
+    if (isAuthenticated || token) {
+      // Re-validate token to ensure it's still valid
+      checkAuth();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]); // Only check on pathname change to avoid loops
+
+  // Only show "My account" if user is authenticated AND has a valid token AND user data
+  const shouldShowMyAccount = isAuthenticated && token && user;
 
   // Helper function to check if a link is active
   const isActive = (href: string) => {
@@ -17,9 +31,9 @@ export function PublicHeader() {
   };
 
   return (
-    <>
+    <div className="sticky top-0 z-50 w-full">
       {/* Top contact / quick links bar */}
-      <div className="w-full bg-[#06244d] text-white text-xs sm:text-sm">
+      <div className="w-full bg-[#06244d] text-white text-xs sm:text-sm shadow-md">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between py-2 px-4 gap-2 sm:gap-0">
           {/* Left Contact Info */}
           <div className="flex items-center gap-4 sm:gap-6">
@@ -67,12 +81,20 @@ export function PublicHeader() {
 
           {/* Right (Login / Register / Social Icons) */}
           <div className="flex items-center gap-4 sm:gap-6">
-            <Link href="/login" className="hover:underline text-white/90">
-              Log in
-            </Link>
-            <Link href="/register" className="hover:underline text-white/90">
-              Register
-            </Link>
+            {shouldShowMyAccount ? (
+              <Link href="/dashboard" className="hover:underline text-white/90">
+                Go to dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/login" className="hover:underline text-white/90">
+                  Log in
+                </Link>
+                <Link href="/register" className="hover:underline text-white/90">
+                  Register
+                </Link>
+              </>
+            )}
 
             {/* Divider */}
             <div className="hidden sm:block w-px h-4 bg-white/30" />
@@ -148,7 +170,7 @@ export function PublicHeader() {
       </div>
 
       {/* Main navigation bar (centered links) */}
-      <nav className="w-full bg-white border-b border-slate-100">
+      <nav className="w-full bg-white border-b border-slate-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           {/* Logo / Brand */}
           <div className="flex items-center gap-2">
@@ -255,7 +277,7 @@ export function PublicHeader() {
                   <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#f4ba1b] rounded-full" />
                 )}
               </Link>
-              {isAuthenticated && (
+              {shouldShowMyAccount && (
                 <Link
                   href="/dashboard/settings"
                   className={`relative transition-colors ${
@@ -277,7 +299,7 @@ export function PublicHeader() {
           <div className="w-8" />
         </div>
       </nav>
-    </>
+    </div>
   );
 }
 

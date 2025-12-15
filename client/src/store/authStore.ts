@@ -9,8 +9,34 @@ interface User {
   name: string;
   first_name: string;
   last_name: string;
-  student_id?: string;
+  middle_initial?: string | null;
+  student_id?: string | null;
   email_verified_at?: string | null;
+  
+  // Additional email fields
+  university_email?: string | null;
+  personal_email?: string | null;
+  
+  // Academic information
+  department?: string | null;
+  major?: string | null;
+  class_level?: string | null;
+  enrollment_status?: string | null;
+  student_type?: string | null;
+  citizenship_status?: string | null;
+  
+  // Contact information
+  phone_number?: string | null;
+  address?: string | null;
+  
+  // Profile
+  profile_photo?: string | null;
+  
+  // Roles
+  roles?: string[];
+  
+  // Organizations
+  organizations?: Array<{ id: number; name: string }> | string[];
 }
 
 interface AuthState {

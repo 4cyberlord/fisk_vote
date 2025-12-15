@@ -5,7 +5,7 @@ import { Calendar } from "primereact/calendar";
 import type { CalendarDateTemplateEvent } from "primereact/calendar";
 import { useCalendarEvents, type CalendarEvent } from "@/hooks/useCalendarEvents";
 import { Calendar as CalendarIcon, Clock, CheckCircle2, XCircle, CalendarDays } from "lucide-react";
-import dayjs from "dayjs";
+import dayjs, { formatDate } from "@/lib/dayjs";
 import Link from "next/link";
 import { Pagination } from "@/components";
 
@@ -188,21 +188,40 @@ export default function CalendarPage() {
                         const isSelected = selectedDate && dayjs(date).isSame(selectedDate, "day");
                         const isToday = dayjs(date).isSame(new Date(), "day");
                         
+                        const baseHover =
+                          !isSelected && !isToday ? "hover:bg-slate-100 hover:text-slate-900" : "";
+
                         return (
                           <div
-                            className={`w-full h-full flex flex-col items-center justify-center relative transition-all ${
-                              isSelected 
-                                ? "bg-slate-900 text-white rounded-lg hover:bg-slate-800 shadow-lg ring-2 ring-slate-300" 
-                                : isToday 
-                                ? "bg-emerald-50 text-emerald-700 rounded-lg border-2 border-emerald-400 hover:bg-emerald-100 font-semibold"
-                                : "hover:bg-slate-100 hover:text-slate-900 rounded-lg"
+                            className={`w-9 h-9 flex flex-col items-center justify-center relative transition-all rounded-lg ${baseHover} ${
+                              isSelected
+                                ? "bg-slate-900 text-white shadow-lg"
+                                : isToday
+                                ? "bg-emerald-100 text-emerald-800 border-2 border-emerald-500 font-bold"
+                                : "text-slate-700"
                             }`}
+                            style={{
+                              backgroundColor: isSelected
+                                ? "rgb(15, 23, 42)"
+                                : isToday
+                                ? "rgb(209, 250, 229)"
+                                : undefined,
+                            }}
                           >
-                            <span className="text-sm font-medium">{event.day}</span>
+                            <span className={`text-sm ${isSelected || isToday ? "font-bold" : "font-medium"}`}>
+                              {event.day}
+                            </span>
                             {hasEvents && (
-                              <div className={`absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full ${
-                                isSelected ? "bg-white" : "bg-slate-600"
-                              }`}></div>
+                              <div
+                                className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                                style={{
+                                  backgroundColor: isSelected
+                                    ? "white"
+                                    : isToday
+                                    ? "rgb(4, 120, 87)"
+                                    : "rgb(71, 85, 105)",
+                                }}
+                              />
                             )}
                           </div>
                         );
@@ -221,7 +240,7 @@ export default function CalendarPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-slate-900">
-                          {dayjs(selectedDate).format("MMMM D, YYYY")}
+                          {dayjs(selectedDate).format("MMMM d, yyyy")}
                         </h3>
                         <p className="text-slate-600 text-sm mt-1">
                           {dayjs(selectedDate).format("dddd")}
@@ -368,7 +387,7 @@ export default function CalendarPage() {
                               {event.title}
                             </p>
                             <p className="text-xs text-slate-600 mt-1">
-                              {dayjs(event.start).format("MMM D")} • {event.start_time}
+                              {formatDate(event.start, "MMM D")} • {event.start_time}
                             </p>
                           </div>
                         </div>
@@ -410,10 +429,10 @@ export default function CalendarPage() {
                             className={`w-16 h-16 rounded-2xl ${getEventColor(event)} flex items-center justify-center text-slate-800 font-semibold text-lg shadow-md`}
                             style={{ opacity: 0.75 }}
                           >
-                            {dayjs(event.start).format("D")}
+                            {formatDate(event.start, "D")}
                           </div>
                           <p className="text-xs font-bold text-slate-500 text-center mt-2 uppercase">
-                            {dayjs(event.start).format("MMM")}
+                            {formatDate(event.start, "MMM")}
                           </p>
                         </div>
                         <div className="flex-1">
@@ -442,7 +461,7 @@ export default function CalendarPage() {
                           <div className="flex items-center gap-6 flex-wrap">
                             <span className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                               <Clock className="w-4 h-4 text-slate-500" />
-                              {dayjs(event.start).format("dddd, MMMM D")} • {event.start_time} - {event.end_time}
+                              {formatDate(event.start, "dddd, MMMM D")} • {event.start_time} - {event.end_time}
                             </span>
                             {event.is_eligible && (
                               <span className="px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-bold">

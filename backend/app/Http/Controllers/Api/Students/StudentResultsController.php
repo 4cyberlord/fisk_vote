@@ -116,7 +116,7 @@ class StudentResultsController extends Controller
                     'id' => $election->id,
                     'title' => $election->title,
                     'description' => $election->description,
-                    'end_time' => $election->end_time ? $election->end_time->toIso8601String() : null,
+                    'end_time' => $election->end_time ? $election->end_time->format('Y-m-d H:i:s') : null,
                     'total_votes' => \App\Models\Vote::where('election_id', $election->id)->count(),
                 ];
             })->values();

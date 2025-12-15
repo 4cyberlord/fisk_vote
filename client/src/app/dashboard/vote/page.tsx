@@ -3,8 +3,9 @@
 import { useState, useMemo, useEffect } from "react";
 import { useActiveElections } from "@/hooks/useElections";
 import Link from "next/link";
-import dayjs from "dayjs";
+import { formatDate } from "@/lib/dateUtils";
 import { Pagination } from "@/components";
+import { useServerTime } from "@/hooks/useServerTime";
 
 const ITEMS_PER_PAGE = 9; // 3 columns × 3 rows
 
@@ -15,13 +16,24 @@ export default function VotePage() {
     isLoading: isLoadingActiveElections,
     error: activeElectionsError,
   } = useActiveElections();
+  
+  // Use Nashville server time for accurate status
+  const { getElectionStatus } = useServerTime();
 
-  // Paginate elections
+  // Sort elections by start_time (latest first) and paginate
   const paginatedElections = useMemo(() => {
     if (!activeElections) return [];
+    
+    // Sort by start_timestamp in descending order (latest first)
+    const sortedElections = [...activeElections].sort((a, b) => {
+      const dateA = a.start_timestamp ?? 0;
+      const dateB = b.start_timestamp ?? 0;
+      return dateB - dateA; // Descending order (newest first)
+    });
+    
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return activeElections.slice(startIndex, endIndex);
+    return sortedElections.slice(startIndex, endIndex);
   }, [activeElections, currentPage]);
 
   const totalPages = Math.ceil((activeElections?.length || 0) / ITEMS_PER_PAGE);
@@ -75,7 +87,15 @@ export default function VotePage() {
         ) : activeElections && activeElections.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {paginatedElections.map((election) => (
+              {paginatedElections.map((election) => {
+                // Calculate live status using Nashville server time
+                const liveStatus = getElectionStatus(
+                  election.start_timestamp,
+                  election.end_timestamp,
+                  election.status
+                );
+                
+                return (
               <Link
                 href={`/dashboard/vote/${election.id}`}
                 key={election.id}
@@ -85,8 +105,14 @@ export default function VotePage() {
                   <h3 className="text-lg font-semibold text-gray-900 truncate flex-1">
                     {election.title}
                   </h3>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 ml-2">
-                    {election.current_status}
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ml-2 ${
+                    liveStatus === "Open" 
+                      ? "bg-green-100 text-green-800 border border-green-200"
+                      : liveStatus === "Upcoming"
+                      ? "bg-blue-100 text-blue-800 border border-blue-200"
+                      : "bg-gray-100 text-gray-800 border border-gray-200"
+                  }`}>
+                    {liveStatus}
                   </span>
                 </div>
                 {election.description && (
@@ -110,8 +136,8 @@ export default function VotePage() {
                       />
                     </svg>
                     <span>
-                      {dayjs(election.start_time).format("MMM D")} -{" "}
-                      {dayjs(election.end_time).format("MMM D, YYYY")}
+                      {formatDate(election.start_timestamp || election.start_time, "MMM d")} -{" "}
+                      {formatDate(election.end_timestamp || election.end_time, "MMM d, yyyy")}
                     </span>
                   </div>
                 </div>
@@ -136,7 +162,8 @@ export default function VotePage() {
                   </div>
                 )}
               </Link>
-              ))}
+                );
+              })}
             </div>
             <Pagination
               currentPage={currentPage}

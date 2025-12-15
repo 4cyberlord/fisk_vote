@@ -3,6 +3,109 @@
 @import "primereact/resources/primereact.min.css";
 @import "primeicons/primeicons.css";
 
+/* Typography Plugin Styles - Manual implementation for Tailwind v4 compatibility */
+.prose {
+  color: inherit;
+  max-width: 65ch;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg {
+  font-size: 1.125rem;
+  line-height: 1.7777778;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg p {
+  margin-top: 1.3333333em;
+  margin-bottom: 1.3333333em;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg h1 {
+  font-size: 2.6666667em;
+  margin-top: 0;
+  margin-bottom: 0.8333333em;
+  line-height: 1.2;
+  font-family: var(--font-heebo), Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
+}
+
+.prose-lg h2 {
+  font-size: 2em;
+  margin-top: 1.6em;
+  margin-bottom: 0.8em;
+  line-height: 1.3;
+  font-family: var(--font-heebo), Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
+}
+
+.prose-lg h3 {
+  font-size: 1.5555556em;
+  margin-top: 1.5555556em;
+  margin-bottom: 0.4444444em;
+  line-height: 1.4;
+  font-family: var(--font-heebo), Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
+}
+
+.prose-lg ul,
+.prose-lg ol {
+  margin-top: 1.3333333em;
+  margin-bottom: 1.3333333em;
+  padding-left: 1.5555556em;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg blockquote {
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  padding-left: 1em;
+  border-left-width: 0.25rem;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+.prose-lg code {
+  font-size: 0.8888889em;
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+}
+
+.prose-lg img {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose-lg a {
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.prose-lg strong {
+  font-weight: 600;
+}
+
+.prose-lg .lead {
+  font-size: 1.2222222em;
+  line-height: 1.6;
+  margin-top: 1.2em;
+  margin-bottom: 1.2em;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
 /* Calendar Day Button Alignment Fix */
 .rdp-day_button {
   display: flex !important;
@@ -40,9 +143,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-roboto: var(--font-roboto);
+  --font-sans: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  --font-heebo: var(--font-heebo);
 }
 
 /* Enable dark mode class strategy for Tailwind */
@@ -73,7 +175,54 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-roboto), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+/* Apply Verdana font to common text elements */
+p, span, div, a, li, td, th, label, input, textarea, select, option {
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 400;
+}
+
+/* Apply Heebo font (weight 500) to headings and buttons */
+h1, h2, h3, h4, h5, h6,
+.font-heebo,
+button,
+.btn,
+[role="button"] {
+  font-family: var(--font-heebo), Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
+}
+
+/* Dashboard Theme - Ensure consistent font application */
+.dashboard-container,
+.dashboard-container * {
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif !important;
+  font-weight: 500;
+}
+
+.dashboard-container h1,
+.dashboard-container h2,
+.dashboard-container h3,
+.dashboard-container h4,
+.dashboard-container h5,
+.dashboard-container h6,
+.dashboard-container button,
+.dashboard-container [role="button"],
+.dashboard-container .font-semibold,
+.dashboard-container .font-bold,
+.dashboard-container [class*="font-semibold"],
+.dashboard-container [class*="font-bold"] {
+  font-family: var(--font-heebo), Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif !important;
+  font-weight: 600 !important;
+}
+
+.dashboard-container input,
+.dashboard-container textarea,
+.dashboard-container select {
+  font-family: Verdana, "system-ui", -apple-system, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif !important;
+  font-weight: 500;
 }
 
 /* Toast Animation */
@@ -93,21 +242,118 @@ body {
 }
 
 /* PrimeReact Calendar Hover Fix */
-.p-calendar .p-datepicker table td > span:hover {
-  background-color: rgb(241, 245, 249) !important;
-  color: rgb(15, 23, 42) !important;
-}
-
-.p-calendar .p-datepicker table td.p-datepicker-day-selected > span:hover {
-  background-color: rgb(30, 41, 59) !important;
-  color: white !important;
-}
-
-.p-calendar .p-datepicker table td.p-datepicker-day-today > span:hover {
-  background-color: rgb(209, 250, 229) !important;
-  color: rgb(4, 120, 87) !important;
-}
-
 .p-calendar .p-datepicker table td > span {
   transition: all 0.2s ease !important;
+  background: transparent !important;
+}
+
+.p-calendar .p-datepicker table td > span:hover {
+  background: transparent !important;
+}
+
+.p-calendar .p-datepicker table td.p-datepicker-today > span,
+.p-calendar .p-datepicker table td.p-datepicker-today > span:hover {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Fix for PrimeReact highlight class overriding custom styles */
+.p-calendar .p-datepicker table td.p-highlight > span,
+.p-calendar .p-datepicker table td.p-highlight > span:hover {
+  background: transparent !important;
+  color: inherit !important;
+}
+
+/* Ensure the datepicker cell doesn't have conflicting backgrounds */
+.p-calendar .p-datepicker table td {
+  background: transparent !important;
+}
+
+.p-calendar .p-datepicker table td:hover {
+  background: transparent !important;
+}
+
+/* Remove any focus ring from PrimeReact that might interfere */
+.p-calendar .p-datepicker table td > span:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* PrimeReact Calendar Selected/Today state overrides (prevent white hover) */
+.p-calendar .p-datepicker table td.p-highlight > span,
+.p-calendar .p-datepicker table td.p-datepicker-day-selected > span {
+  background-color: #0f172a !important; /* slate-900 */
+  color: #ffffff !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.18) !important;
+}
+
+.p-calendar .p-datepicker table td.p-highlight > span:hover,
+.p-calendar .p-datepicker table td.p-datepicker-day-selected > span:hover {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+.p-calendar .p-datepicker table td.p-datepicker-day-today > span,
+.p-calendar .p-datepicker table td.p-datepicker-day-today > span:hover {
+  background-color: #d1fae5 !important; /* emerald-100 */
+  color: #047857 !important; /* emerald-700 */
+  border: 2px solid #34d399 !important; /* emerald-300 */
+  border-radius: 0.5rem !important;
+}
+
+/* Command Palette Scrollbar Styling */
+.command-palette-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.command-palette-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.command-palette-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.command-palette-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.command-palette-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Text Selection Styles - Prevent background color from being copied */
+::selection {
+  background-color: rgba(59, 130, 246, 0.2); /* Light blue selection */
+  color: inherit;
+  background-clip: padding-box;
+}
+
+::-moz-selection {
+  background-color: rgba(59, 130, 246, 0.2); /* Light blue selection for Firefox */
+  color: inherit;
+  background-clip: padding-box;
+}
+
+/* Ensure selection doesn't carry background colors when copying */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure text selection doesn't inherit element backgrounds */
+p::selection,
+span::selection,
+div::selection,
+h1::selection,
+h2::selection,
+h3::selection,
+h4::selection,
+h5::selection,
+h6::selection {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+  color: inherit !important;
 }

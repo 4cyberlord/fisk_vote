@@ -112,6 +112,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, JWT
         return $this->belongsToMany(Organization::class);
     }
 
+    /**
+     * Get the notifications for this user.
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
 
     /**
      * Send the email verification notification.

@@ -59,6 +59,7 @@ export interface UserResponse {
     
     // Account Information
     roles: string[];
+    organizations?: Array<{ id: number; name: string }> | string[];
     created_at?: string | null;
     updated_at?: string | null;
   };

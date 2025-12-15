@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Students;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Services\TimeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -27,14 +28,14 @@ class StudentElectionController extends Controller
                 ], 401);
             }
 
-            // Get current time
-            $now = now();
+            $now = now(config('app.timezone', 'America/Chicago'));
 
-            // Query active elections that are currently open
-            $elections = Election::where('status', 'active')
+            // Treat elections as active if their window is current, regardless of the raw status flag,
+            // but exclude explicitly closed/archived records.
+            $elections = Election::whereNotIn('status', ['closed', 'archived'])
                 ->where('start_time', '<=', $now)
                 ->where('end_time', '>=', $now)
-                ->orderBy('start_time', 'asc')
+                ->orderBy('start_time')
                 ->get();
 
             // Filter elections by eligibility
@@ -55,6 +56,8 @@ class StudentElectionController extends Controller
                     'allow_abstain' => $election->allow_abstain,
                     'start_time' => $election->start_time->toIso8601String(),
                     'end_time' => $election->end_time->toIso8601String(),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'current_status' => $election->current_status,
                     'has_voted' => $election->hasUserVoted($user),
                     'positions_count' => $election->positions()->count(),
@@ -75,7 +78,8 @@ class StudentElectionController extends Controller
                 'data' => $electionsData->values(), // Reset array keys
                 'meta' => [
                     'total' => $electionsData->count(),
-                    'timestamp' => $now->toIso8601String(),
+                    'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
 
@@ -132,8 +136,10 @@ class StudentElectionController extends Controller
                     'ranking_levels' => $election->ranking_levels,
                     'allow_write_in' => $election->allow_write_in,
                     'allow_abstain' => $election->allow_abstain,
-                    'start_time' => $election->start_time->toIso8601String(),
-                    'end_time' => $election->end_time->toIso8601String(),
+                    'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                    'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'status' => $election->status,
                     'current_status' => $election->current_status,
                     'has_voted' => $election->hasUserVoted($user),
@@ -156,6 +162,7 @@ class StudentElectionController extends Controller
                 'meta' => [
                     'total' => $electionsData->count(),
                     'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
 
@@ -190,8 +197,6 @@ class StudentElectionController extends Controller
                 ->orderBy('start_time', 'desc')
                 ->get();
 
-            $now = now();
-
             $electionsData = $elections->map(function (Election $election) {
                 return [
                     'id' => $election->id,
@@ -200,6 +205,8 @@ class StudentElectionController extends Controller
                     'type' => $election->type,
                     'start_time' => $election->start_time?->toIso8601String(),
                     'end_time' => $election->end_time?->toIso8601String(),
+                    'start_timestamp' => $election->start_timestamp,
+                    'end_timestamp' => $election->end_timestamp,
                     'status' => $election->status,
                     'current_status' => $election->current_status,
                     'positions_count' => $election->positions()->count(),
@@ -221,7 +228,8 @@ class StudentElectionController extends Controller
                     'open' => $openCount,
                     'upcoming' => $upcomingCount,
                     'closed' => $closedCount,
-                    'timestamp' => $now->toIso8601String(),
+                    'timestamp' => now()->toIso8601String(),
+                    'server_time' => TimeService::getNashvilleTimestamp(), // Nashville time from World Time API
                 ],
             ]);
         } catch (\Exception $e) {
@@ -284,8 +292,10 @@ class StudentElectionController extends Controller
                 'ranking_levels' => $election->ranking_levels,
                 'allow_write_in' => $election->allow_write_in,
                 'allow_abstain' => $election->allow_abstain,
-                'start_time' => $election->start_time->toIso8601String(),
-                'end_time' => $election->end_time->toIso8601String(),
+                'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                'start_timestamp' => $election->start_timestamp,
+                'end_timestamp' => $election->end_timestamp,
                 'status' => $election->status,
                 'current_status' => $election->current_status,
                 'has_voted' => $election->hasUserVoted($user),

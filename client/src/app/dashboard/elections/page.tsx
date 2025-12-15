@@ -3,9 +3,8 @@
 import { useMemo, useState } from "react";
 import { useAllElections } from "@/hooks/useElections";
 import Link from "next/link";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import { formatDate } from "@/lib/dateUtils";
+import { useServerTime } from "@/hooks/useServerTime";
 import {
   ColumnDef,
   flexRender,
@@ -21,10 +20,6 @@ import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Filter } from "lucide-r
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Pagination } from "@/components";
 
-// Extend dayjs with plugins
-dayjs.extend(relativeTime);
-dayjs.extend(customParseFormat);
-
 const ACTIVE_STATUS_LIST_PER_PAGE = 5;
 
 function ElectionsTable({ elections }: { elections: ReturnType<typeof useAllElections>["data"] }) {
@@ -33,6 +28,9 @@ function ElectionsTable({ elections }: { elections: ReturnType<typeof useAllElec
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  
+  // Use Nashville server time for accurate status
+  const { getElectionStatus } = useServerTime();
 
   const data = useMemo(() => elections || [], [elections]);
 
@@ -82,7 +80,10 @@ function ElectionsTable({ elections }: { elections: ReturnType<typeof useAllElec
         ),
         accessorKey: "current_status",
         cell: (info) => {
-          const status = (info.getValue() as string) || "—";
+          // Calculate live status using Nashville server time
+          const row = info.row.original;
+          const liveStatus = getElectionStatus(row.start_timestamp, row.end_timestamp, row.status);
+          const status = liveStatus || "—";
           const statusColors: Record<string, string> = {
             Open: "bg-green-100 text-green-800 border-green-200",
             Upcoming: "bg-blue-100 text-blue-800 border-blue-200",
@@ -143,11 +144,11 @@ function ElectionsTable({ elections }: { elections: ReturnType<typeof useAllElec
             )}
           </button>
         ),
-        accessorFn: (row) => new Date(row.start_time).getTime(),
+        accessorFn: (row) => row.start_timestamp || new Date(row.start_time).getTime() / 1000,
         id: "start_time",
         cell: ({ row }) => (
           <span className="text-xs text-gray-600">
-            {dayjs(row.original.start_time).format("MMM D, YYYY")}
+            {formatDate(row.original.start_timestamp || row.original.start_time, "MMM d, yyyy")}
           </span>
         ),
       },
@@ -604,8 +605,8 @@ export default function ElectionsPage() {
                                         />
                                       </svg>
                                       <span>
-                                        {dayjs(election.start_time).format("MMM D, YYYY")} -{" "}
-                                        {dayjs(election.end_time).format("MMM D, YYYY")}
+                                        {formatDate(election.start_timestamp || election.start_time, "MMM d, yyyy")} -{" "}
+                                        {formatDate(election.end_timestamp || election.end_time, "MMM d, yyyy")}
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-1">

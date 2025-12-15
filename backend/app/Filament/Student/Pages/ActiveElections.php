@@ -92,55 +92,58 @@ class ActiveElections extends Page implements HasTable
                 TextColumn::make('voting_window')
                     ->label('Voting Window')
                     ->state(function (Election $record) {
-                        if (!$record->start_time || !$record->end_time) {
+                        // Use timestamps for accurate timezone-agnostic calculations
+                        $startTimestamp = $record->start_timestamp;
+                        $endTimestamp = $record->end_timestamp;
+                        $nowTimestamp = time();
+
+                        if (!$startTimestamp || !$endTimestamp) {
                             return 'Not set';
                         }
 
                         try {
-                            $now = now();
-                            $startTime = $record->start_time instanceof \Carbon\Carbon
-                                ? $record->start_time
-                                : \Carbon\Carbon::parse($record->start_time);
-                            $endTime = $record->end_time instanceof \Carbon\Carbon
-                                ? $record->end_time
-                                : \Carbon\Carbon::parse($record->end_time);
-
                             // If election hasn't started yet
-                            if ($now->lt($startTime)) {
-                                $daysUntilStart = (int) $now->diffInDays($startTime);
-                                $hoursUntilStart = (int) ($now->diffInHours($startTime) % 24);
+                            if ($nowTimestamp < $startTimestamp) {
+                                $secondsUntil = $startTimestamp - $nowTimestamp;
+                                $daysUntilStart = (int) floor($secondsUntil / 86400);
+                                $hoursUntilStart = (int) floor(($secondsUntil % 86400) / 3600);
 
                                 if ($daysUntilStart > 0) {
                                     return "Starts in {$daysUntilStart} day" . ($daysUntilStart !== 1 ? 's' : '');
-                                } else {
+                                } elseif ($hoursUntilStart > 0) {
                                     return "Starts in {$hoursUntilStart} hour" . ($hoursUntilStart !== 1 ? 's' : '');
+                                } else {
+                                    $minutesUntil = (int) ceil($secondsUntil / 60);
+                                    return "Starts in {$minutesUntil} minute" . ($minutesUntil !== 1 ? 's' : '');
                                 }
                             }
 
                             // If election has ended
-                            if ($now->gt($endTime)) {
-                                $daysSinceEnd = (int) $endTime->diffInDays($now);
-                                $hoursSinceEnd = (int) $endTime->diffInHours($now);
-                                $minutesSinceEnd = (int) $endTime->diffInMinutes($now);
+                            if ($nowTimestamp > $endTimestamp) {
+                                $secondsSince = $nowTimestamp - $endTimestamp;
+                                $daysSinceEnd = (int) floor($secondsSince / 86400);
+                                $hoursSinceEnd = (int) floor(($secondsSince % 86400) / 3600);
+                                $minutesSinceEnd = (int) floor(($secondsSince % 3600) / 60);
 
                                 if ($daysSinceEnd >= 1) {
                                     return "Ended {$daysSinceEnd} day" . ($daysSinceEnd !== 1 ? 's' : '') . " ago";
-                                } else if ($hoursSinceEnd >= 1) {
+                                } elseif ($hoursSinceEnd >= 1) {
                                     return "Ended {$hoursSinceEnd} hour" . ($hoursSinceEnd !== 1 ? 's' : '') . " ago";
-                                } else if ($minutesSinceEnd >= 1) {
+                                } elseif ($minutesSinceEnd >= 1) {
                                     return "Ended {$minutesSinceEnd} minute" . ($minutesSinceEnd !== 1 ? 's' : '') . " ago";
                                 } else {
                                     return "Just ended";
                                 }
                             }
 
-                            // Election is currently active - calculate days remaining
-                            $daysRemaining = (int) $now->diffInDays($endTime, false);
-                            $hoursRemaining = (int) ($now->diffInHours($endTime, false) % 24);
+                            // Election is currently active - calculate time remaining
+                            $secondsRemaining = $endTimestamp - $nowTimestamp;
+                            $daysRemaining = (int) floor($secondsRemaining / 86400);
+                            $hoursRemaining = (int) floor(($secondsRemaining % 86400) / 3600);
 
                             if ($daysRemaining > 0) {
                                 return "{$daysRemaining} day" . ($daysRemaining !== 1 ? 's' : '') . " remaining";
-                            } else if ($hoursRemaining > 0) {
+                            } elseif ($hoursRemaining > 0) {
                                 return "{$hoursRemaining} hour" . ($hoursRemaining !== 1 ? 's' : '') . " remaining";
                             } else {
                                 return "Less than 1 hour remaining";
@@ -156,34 +159,31 @@ class ActiveElections extends Page implements HasTable
                     })
                     ->badge()
                     ->color(function (Election $record) {
-                        if (!$record->start_time || !$record->end_time) {
+                        $startTimestamp = $record->start_timestamp;
+                        $endTimestamp = $record->end_timestamp;
+                        $nowTimestamp = time();
+
+                        if (!$startTimestamp || !$endTimestamp) {
                             return 'gray';
                         }
 
                         try {
-                            $now = now();
-                            $startTime = $record->start_time instanceof \Carbon\Carbon
-                                ? $record->start_time
-                                : \Carbon\Carbon::parse($record->start_time);
-                            $endTime = $record->end_time instanceof \Carbon\Carbon
-                                ? $record->end_time
-                                : \Carbon\Carbon::parse($record->end_time);
-
                             // Not started yet
-                            if ($now->lt($startTime)) {
+                            if ($nowTimestamp < $startTimestamp) {
                                 return 'info';
                             }
 
                             // Ended
-                            if ($now->gt($endTime)) {
+                            if ($nowTimestamp > $endTimestamp) {
                                 return 'gray';
                             }
 
                             // Active - color based on urgency
-                            $daysRemaining = $now->diffInDays($endTime, false);
+                            $secondsRemaining = $endTimestamp - $nowTimestamp;
+                            $daysRemaining = $secondsRemaining / 86400;
                             if ($daysRemaining <= 1) {
                                 return 'danger'; // Less than 1 day - urgent
-                            } else if ($daysRemaining <= 3) {
+                            } elseif ($daysRemaining <= 3) {
                                 return 'warning'; // 2-3 days - warning
                             } else {
                                 return 'success'; // More than 3 days - good

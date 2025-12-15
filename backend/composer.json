@@ -10,6 +10,7 @@
         "filament/filament": "^4.0",
         "filament/spatie-laravel-media-library-plugin": "^4.2",
         "laravel/framework": "^12.0",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "nyholm/psr7": "^1.8",
         "railsware/mailtrap-php": "^3.9",
@@ -18,6 +19,7 @@
         "tymon/jwt-auth": "^2.2"
     },
     "require-dev": {
+        "dedoc/scramble": "^0.13.8",
         "fakerphp/faker": "^1.23",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",

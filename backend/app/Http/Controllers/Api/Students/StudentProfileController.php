@@ -28,8 +28,26 @@ class StudentProfileController extends Controller
                 ], 401);
             }
 
+            // Log incoming file for debugging
+            Log::info('Profile photo upload attempt', [
+                'user_id' => $user->id,
+                'has_file' => $request->hasFile('profile_photo'),
+                'file_info' => $request->hasFile('profile_photo') ? [
+                    'original_name' => $request->file('profile_photo')->getClientOriginalName(),
+                    'mime_type' => $request->file('profile_photo')->getMimeType(),
+                    'client_mime' => $request->file('profile_photo')->getClientMimeType(),
+                    'size' => $request->file('profile_photo')->getSize(),
+                    'extension' => $request->file('profile_photo')->getClientOriginalExtension(),
+                ] : null,
+            ]);
+
             $validated = $request->validate([
-                'profile_photo' => 'required|image|mimes:jpeg,jpg,png,svg|max:5120', // 5MB
+                'profile_photo' => 'required|file|mimetypes:image/jpeg,image/png,image/gif,image/webp|max:2048', // 2MB (PHP default)
+            ], [
+                'profile_photo.required' => 'Please select an image to upload.',
+                'profile_photo.file' => 'The uploaded file is invalid.',
+                'profile_photo.mimetypes' => 'The image must be a JPEG, PNG, GIF, or WebP file.',
+                'profile_photo.max' => 'The image must not exceed 2MB.',
             ]);
 
             $file = $request->file('profile_photo');

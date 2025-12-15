@@ -46,8 +46,8 @@ class StudentVoteController extends Controller
                         'description' => $election->description,
                         'type' => $election->type,
                         'current_status' => $election->current_status,
-                        'start_time' => optional($election->start_time)->toIso8601String(),
-                        'end_time' => optional($election->end_time)->toIso8601String(),
+                        'start_time' => optional($election->start_time)?->toIso8601String(),
+                        'end_time' => optional($election->end_time)?->toIso8601String(),
                     ],
                     'voted_at' => optional($vote->voted_at)->toIso8601String(),
                     'vote_data' => $vote->vote_data,
@@ -218,15 +218,22 @@ class StudentVoteController extends Controller
                 }
 
                 // Persist a single vote row for this election + voter
+                // position_id is required (FK) — use the first position or fail fast
+                $firstPositionId = $election->positions->first()?->id;
+                if (!$firstPositionId) {
+                    throw new \Exception('This election has no positions to vote on.');
+                }
+
                 $vote = Vote::create([
                     'election_id' => $election->id,
-                    // Store the first position id just to satisfy the FK; all
-                    // actual per‑position choices live in vote_data JSON.
-                    'position_id' => optional($election->positions->first())->id ?? $election->positions->value('id'),
+                    'position_id' => $firstPositionId,
                     'voter_id' => $user->id,
                     'vote_data' => $storedVoteData,
                     'voted_at' => now(),
                 ]);
+
+                // Reload relationships for observer
+                $vote->load(['voter', 'election']);
 
                 DB::commit();
 
@@ -256,7 +263,7 @@ class StudentVoteController extends Controller
 
             } catch (\Exception $e) {
                 DB::rollBack();
-                
+
                 // Log failed vote submission
                 $auditLogService = app(\App\Services\AuditLogService::class);
                 $auditLogService->logVoteSubmission(
@@ -265,7 +272,7 @@ class StudentVoteController extends Controller
                     'failed',
                     $e->getMessage()
                 );
-                
+
                 throw $e;
             }
 
@@ -542,8 +549,8 @@ class StudentVoteController extends Controller
                         'description' => $election->description,
                         'type' => $election->type,
                         'current_status' => $election->current_status,
-                        'start_time' => $election->start_time->toIso8601String(),
-                        'end_time' => $election->end_time->toIso8601String(),
+                        'start_time' => $election->start_time->format('Y-m-d H:i:s'),
+                        'end_time' => $election->end_time->format('Y-m-d H:i:s'),
                     ],
                     'positions' => $positionsData,
                     'has_voted' => $hasVoted,

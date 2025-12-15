@@ -19,8 +19,6 @@ function CandidateAvatar({
   const [imageError, setImageError] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   
-  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
-
   const avatarConfig = useMemo(() => {
     const seed =
       candidate.user?.email ||
@@ -34,25 +32,47 @@ function CandidateAvatar({
   }, [candidate]);
 
   // Helper to convert relative URLs to absolute URLs
-  const getImageUrl = (url: string | null | undefined): string | null => {
-    if (!url) return null;
-    // If it's already an absolute URL (starts with http:// or https://), return as is
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
+  const backendBase = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/+$/, "");
+
+  const rewriteLocalhost = (url: string): string => {
+    if (!backendBase) return url;
+    try {
+      const parsed = new URL(url);
+      if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") {
+        return url.replace(`${parsed.protocol}//${parsed.host}`, backendBase);
+      }
+    } catch {
+      // ignore parse errors
     }
-    // If it starts with /, prepend backend URL
-    if (url.startsWith('/')) {
-      return `${BACKEND_URL}${url}`;
-    }
-    // Otherwise, assume it's a relative path and prepend backend URL with /
-    return `${BACKEND_URL}/${url}`;
+    return url;
   };
 
-  // Determine which image to use (priority: candidate.photo_url > candidate.user.profile_photo)
+  const getImageUrl = (url: string | null | undefined): string | null => {
+    if (!url) return null;
+    // Absolute URL: rewrite localhost to backendBase if provided
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return rewriteLocalhost(url);
+    }
+    // Protocol-relative
+    if (url.startsWith("//")) {
+      return `${window?.location?.protocol ?? "https:"}${url}`;
+    }
+    // Path starting with / -> prefix backend base if provided, else use as-is
+    if (url.startsWith("/")) {
+      if (backendBase) return `${backendBase}${url}`;
+      return url;
+    }
+    // Bare path -> prefix backend base if provided, else make it relative
+    if (backendBase) return `${backendBase}/${url.replace(/^\/+/, "")}`;
+    return `/${url.replace(/^\/+/, "")}`;
+  };
+
+  // Determine which image to use (priority: candidate upload > user profile photo)
   useEffect(() => {
+    // Use the candidate-specific photo uploaded in admin as the official election image.
     const photoUrl = candidate.photo_url ? getImageUrl(candidate.photo_url) : null;
     const profilePhoto = candidate.user?.profile_photo ? getImageUrl(candidate.user.profile_photo) : null;
-    
+
     setImageSrc(photoUrl || profilePhoto || null);
     setImageError(false);
   }, [candidate.photo_url, candidate.user?.profile_photo]);

@@ -108,11 +108,11 @@ class ElectionInfolist
                     ->schema([
                 TextEntry::make('start_time')
                             ->label('Start Time')
-                    ->dateTime(),
+                            ->dateTime('M d, Y g:i A'),
 
                 TextEntry::make('end_time')
                             ->label('End Time')
-                    ->dateTime(),
+                            ->dateTime('M d, Y g:i A'),
                     ])
                     ->columns(2),
 
