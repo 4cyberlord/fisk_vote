@@ -110,7 +110,7 @@ function VotesTable({ votes }: { votes: VoteEntry[] }) {
         cell: ({ row }) => (
           <div>
             <p className="text-sm text-gray-900">
-              {formatDate(row.original.voted_at, "MMM D, YYYY")}
+              {formatDate(row.original.voted_at, "MMM d, yyyy")}
             </p>
             <p className="text-xs text-gray-500">
               {formatDate(row.original.voted_at, "h:mm A")}

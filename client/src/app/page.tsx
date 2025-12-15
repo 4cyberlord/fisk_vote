@@ -103,7 +103,7 @@ export default function HomePage() {
                     {nextElection?.title
                       ? `${nextElection.title} · ${formatDate(
                           nextElection.start_timestamp || nextElection.start_time,
-                          "MMM D, YYYY · h:mm a"
+                          "MMM d, yyyy · h:mm a"
                         )}`
                       : "Stay tuned for the next election"}
                   </p>

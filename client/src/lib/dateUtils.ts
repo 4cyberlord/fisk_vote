@@ -53,8 +53,14 @@ export function formatDate(
     // Unix timestamp
     dt = DateTime.fromSeconds(date).setZone(APP_TIMEZONE);
   } else if (typeof date === "string") {
-    // Backend date string
-    dt = DateTime.fromFormat(date, "yyyy-MM-dd HH:mm:ss", { zone: APP_TIMEZONE });
+    // Try ISO first, then common backend formats
+    dt = DateTime.fromISO(date, { zone: APP_TIMEZONE });
+    if (!dt.isValid) {
+      dt = DateTime.fromFormat(date, "yyyy-MM-dd HH:mm:ss", { zone: APP_TIMEZONE });
+    }
+    if (!dt.isValid) {
+      dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: APP_TIMEZONE });
+    }
   } else {
     // Already a DateTime
     dt = date.setZone(APP_TIMEZONE);

@@ -111,7 +111,7 @@ export default function ResultsPage() {
                           <div className="flex items-center gap-2 text-sm text-gray-600">
                             <Calendar className="w-4 h-4" />
                             <span>
-                              Ended {formatDate(election.end_time, "MMM D, YYYY")}
+                              Ended {formatDate(election.end_time, "MMM d, yyyy")}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-gray-600">

@@ -28,18 +28,15 @@ class StudentElectionController extends Controller
                 ], 401);
             }
 
-            // Get current time in UTC for consistent comparison
-            $now = \Carbon\Carbon::now('UTC');
+            $now = now(config('app.timezone', 'America/Chicago'));
 
-            // Query active elections - get all active elections and filter by current_status
-            // This ensures we use the model's getCurrentStatusAttribute which handles timezone correctly
-            $elections = Election::where('status', 'active')
-                ->get()
-                ->filter(function ($election) {
-                    return $election->current_status === 'Open';
-                })
-                ->sortBy('start_time')
-                ->values();
+            // Treat elections as active if their window is current, regardless of the raw status flag,
+            // but exclude explicitly closed/archived records.
+            $elections = Election::whereNotIn('status', ['closed', 'archived'])
+                ->where('start_time', '<=', $now)
+                ->where('end_time', '>=', $now)
+                ->orderBy('start_time')
+                ->get();
 
             // Filter elections by eligibility
             $eligibleElections = $elections->filter(function ($election) use ($user) {
@@ -57,8 +54,8 @@ class StudentElectionController extends Controller
                     'ranking_levels' => $election->ranking_levels,
                     'allow_write_in' => $election->allow_write_in,
                     'allow_abstain' => $election->allow_abstain,
-                    'start_time' => $election->start_time->format('Y-m-d H:i:s'),
-                    'end_time' => $election->end_time->format('Y-m-d H:i:s'),
+                    'start_time' => $election->start_time->toIso8601String(),
+                    'end_time' => $election->end_time->toIso8601String(),
                     'start_timestamp' => $election->start_timestamp,
                     'end_timestamp' => $election->end_timestamp,
                     'current_status' => $election->current_status,
@@ -200,16 +197,14 @@ class StudentElectionController extends Controller
                 ->orderBy('start_time', 'desc')
                 ->get();
 
-            $now = now();
-
             $electionsData = $elections->map(function (Election $election) {
                 return [
                     'id' => $election->id,
                     'title' => $election->title,
                     'description' => $election->description,
                     'type' => $election->type,
-                    'start_time' => $election->start_time?->format('Y-m-d H:i:s'),
-                    'end_time' => $election->end_time?->format('Y-m-d H:i:s'),
+                    'start_time' => $election->start_time?->toIso8601String(),
+                    'end_time' => $election->end_time?->toIso8601String(),
                     'start_timestamp' => $election->start_timestamp,
                     'end_timestamp' => $election->end_timestamp,
                     'status' => $election->status,

@@ -15,7 +15,7 @@ class NotificationController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $query = Notification::forUser($user->id)
             ->orderBy('created_at', 'desc');
 
@@ -64,7 +64,7 @@ class NotificationController extends Controller
     public function markAsRead(Request $request, int $id): JsonResponse
     {
         $user = $request->user();
-        
+
         $notification = Notification::forUser($user->id)->findOrFail($id);
         $notification->markAsRead();
 
@@ -80,7 +80,7 @@ class NotificationController extends Controller
     public function markAllAsRead(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         Notification::forUser($user->id)
             ->unread()
             ->update([
@@ -100,7 +100,7 @@ class NotificationController extends Controller
     public function unreadCount(Request $request): JsonResponse
     {
         $user = $request->user();
-        
+
         $urgentUnread = Notification::forUser($user->id)->unread()->urgent()->count();
         $totalUnread = Notification::forUser($user->id)->unread()->count();
 

@@ -1176,7 +1176,7 @@ export default function DashboardPage() {
                                 {election.title}
                               </p>
                               <p className="text-[10px] text-gray-600 mt-0.5 font-medium">
-                                Ends {formatDate(election.end_time, "MMM D, YYYY")}
+                                Ends {formatDate(election.end_time, "MMM d, yyyy")}
                               </p>
                             </div>
                             <svg
