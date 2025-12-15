@@ -31,3 +31,10 @@ Route::get('/blog-image/{path}', function ($path) {
         abort(404);
     }
 })->name('blog.image');
+
+// Convenience redirects for API docs (Scramble)
+// Hitting http://<backend-host>/docs/api or /docs/api.json serves the UI/spec.
+// These redirects make common guesses work even if the frontend catches /docs.
+Route::redirect('/api/docs', '/docs/api')->name('scramble.ui.redirect');
+Route::redirect('/api/docs.json', '/docs/api.json')->name('scramble.json.redirect');
+Route::redirect('/docs', '/docs/api')->name('scramble.docs.redirect');
