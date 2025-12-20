@@ -1,0 +1,184 @@
+name: fisk_pulse
+description: FiskPulse - Secure University Voting System
+publish_to: none
+
+version: 0.1.0-beta+1
+
+environment:
+  sdk: ^3.10.4
+  flutter: '>=3.24.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # CORE FLUTTER
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  cupertino_icons: ^1.0.8
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # STATE MANAGEMENT & DEPENDENCY INJECTION
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  provider: ^6.1.5                    # State management
+  get_it: ^9.2.0                      # Service locator for DI
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # NETWORKING & HTTP
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  dio: ^5.9.0                         # HTTP client with interceptors
+  dio_smart_retry: ^7.0.0             # Automatic retry logic
+  pretty_dio_logger: ^1.4.0           # Logging interceptor
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # LOCAL STORAGE & CACHING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  hive_ce: ^2.10.1                    # Local NoSQL database (Community Edition)
+  hive_ce_flutter: ^2.2.0             # Flutter support for Hive CE
+  shared_preferences: ^2.5.3          # Simple key-value storage
+  flutter_secure_storage: ^10.0.0     # iOS/Android secure storage
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # FIREBASE & CLOUD SERVICES
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  firebase_core: ^4.0.0               # Firebase initialization
+  firebase_auth: ^6.0.1               # Firebase authentication
+  firebase_messaging: ^16.1.0         # Push notifications (FCM)
+  cloud_firestore: ^6.1.1             # Cloud database
+  firebase_analytics: ^12.1.0         # Analytics tracking
+  firebase_crashlytics: ^5.0.5        # Crash reporting
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # SERIALIZATION & JSON
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  freezed_annotation: ^3.1.0          # Immutable model classes
+  json_annotation: ^4.9.0             # JSON serialization
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # UI & WIDGETS
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  flutter_svg: ^2.0.17                # SVG support
+  cached_network_image: ^3.4.1        # Image caching
+  shimmer: ^3.0.0                     # Loading skeleton
+  lottie: ^3.3.1                      # Animations
+  fl_chart: ^1.1.1                    # Charts & graphs
+  table_calendar: ^3.2.0              # Calendar widget
+  intl: ^0.20.1                       # Internationalization
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # ROUTING & NAVIGATION
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  go_router: ^17.0.1                  # Modern routing
+  get: ^4.6.6                         # GetX - State management, routing & DI
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # UTILITIES & HELPERS
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  dartz: ^0.10.1                      # Functional programming (Either/Option)
+  equatable: ^2.0.7                   # Value equality helpers
+  connectivity_plus: ^6.1.0           # Check internet connectivity
+  internet_connection_checker: ^3.0.1 # Internet availability
+  device_info_plus: ^12.3.0           # Device information
+  package_info_plus: ^9.0.0           # App version info
+  uuid: ^4.5.1                        # UUID generation
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # DATETIME & FORMATTING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  timeago: ^3.7.0                     # Relative time formatting
+  timezone: ^0.10.0                   # Timezone support
+  jiffy: ^6.3.1                       # Date/time manipulation
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # LOGGING & DEBUGGING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  logger: ^2.5.0                      # Logging utility
+  sentry_flutter: ^9.8.0              # Error tracking & APM
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # FILE HANDLING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  file_picker: ^10.3.7                 # File selection
+  image_picker: ^1.1.2                # Camera & gallery
+  permission_handler: ^12.0.1         # Permissions management
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # FORM & VALIDATION
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  email_validator: ^3.0.0             # Email validation
+  url_launcher: ^6.3.1                # Open URLs and email apps
+  share_plus: ^10.1.2                 # Share content
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # ENVIRONMENT & CONFIGURATION
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  flutter_dotenv: ^6.0.0              # .env file support
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # ══════════════════════════════════════════════════════════════════════════
+  # TESTING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  mocktail: ^1.0.4                    # Mocking framework
+  mockito: ^5.6.1                     # Alternative mocking
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # CODE GENERATION & BUILD
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  build_runner: ^2.4.15               # Code generator runner
+  freezed: ^3.2.3                     # Model code generation
+  json_serializable: ^6.9.5           # JSON code generation
+  hive_ce_generator: ^1.7.0           # Hive CE adapter generation
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # LINTING & CODE QUALITY
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  flutter_lints: ^6.0.0               # Flutter lint rules
+  very_good_analysis: ^10.0.0          # Stricter lint rules
+  
+  # ══════════════════════════════════════════════════════════════════════════
+  # INTEGRATION TESTING
+  # ══════════════════════════════════════════════════════════════════════════
+  
+  integration_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/logos/
+    - assets/images/illustrations/
+    - assets/images/icons/
+    - assets/config/
+    # Environment files (loaded by flutter_dotenv)
+    - .env.example
+    - .env.development
+    - .env.staging
+    - .env.production
+
+  # fonts:
+  #   - family: CustomFont
+  #     fonts:
+  #       - asset: assets/fonts/CustomFont-Regular.ttf
+  #       - asset: assets/fonts/CustomFont-Bold.ttf
+  #         weight: 700

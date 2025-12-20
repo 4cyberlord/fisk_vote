@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Api\Students;
 
 use App\Http\Controllers\Controller;
 use App\Models\Election;
+use App\Models\User;
+use App\Models\Vote;
 use App\Services\TimeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StudentElectionController extends Controller
 {
@@ -358,6 +361,185 @@ class StudentElectionController extends Controller
                 'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred',
             ], 500);
         }
+    }
+
+    /**
+     * Get turnout statistics for a specific election.
+     *
+     * GET /api/v1/students/elections/{id}/turnout
+     *
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getElectionTurnout(Request $request, $id)
+    {
+        try {
+            $user = auth('api')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated.',
+                ], 401);
+            }
+
+            $election = Election::find($id);
+
+            if (!$election) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Election not found.',
+                ], 404);
+            }
+
+            // Check if user is eligible
+            if (!$election->isEligibleForUser($user)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not eligible to view this election.',
+                ], 403);
+            }
+
+            // Get all eligible users for this election
+            $eligibleUsers = User::whereHas('roles', function ($query) {
+                $query->where('name', 'Student');
+            })
+            ->where('enrollment_status', 'Active')
+            ->get()
+            ->filter(function ($eligibleUser) use ($election) {
+                return $election->isEligibleForUser($eligibleUser);
+            });
+
+            $totalEligibleVoters = $eligibleUsers->count();
+
+            // Get distinct voters who have voted in this election
+            $totalVoted = Vote::where('election_id', $election->id)
+                ->select('voter_id')
+                ->distinct()
+                ->count('voter_id');
+
+            // Calculate participation rate
+            $participationRate = $totalEligibleVoters > 0
+                ? round(($totalVoted / $totalEligibleVoters) * 100, 1)
+                : 0.0;
+
+            // Default participation goal (can be made configurable later)
+            $participationGoal = 80.0;
+
+            // Calculate votes remaining to reach goal
+            $votesNeededForGoal = (int) ceil(($participationGoal / 100) * $totalEligibleVoters);
+            $votesRemaining = max(0, $votesNeededForGoal - $totalVoted);
+
+            // Calculate percentage to goal
+            $percentageToGoal = $participationGoal > 0
+                ? round(($participationRate / $participationGoal) * 100, 1)
+                : 0.0;
+
+            // Determine election status
+            $status = $election->current_status === 'Open' ? 'active' :
+                     ($election->current_status === 'Upcoming' ? 'upcoming' : 'closed');
+
+            // Build response data
+            $turnoutData = [
+                'election_id' => $election->id,
+                'election_title' => $election->title,
+                'status' => strtolower($status),
+                'turnout' => [
+                    'total_eligible_voters' => $totalEligibleVoters,
+                    'total_voted' => $totalVoted,
+                    'participation_rate' => $participationRate,
+                    'participation_goal' => $participationGoal,
+                    'votes_remaining' => $votesRemaining,
+                    'percentage_to_goal' => $percentageToGoal,
+                ],
+                'updated_at' => now()->toIso8601String(),
+            ];
+
+            // Include breakdown by class year if requested
+            $includeBreakdown = $request->boolean('include_breakdown', false);
+            if ($includeBreakdown) {
+                $classYearBreakdown = $this->calculateClassYearBreakdown($election, $eligibleUsers);
+                $turnoutData['by_class_year'] = $classYearBreakdown;
+            }
+
+            Log::info('API Election Turnout: Retrieved turnout statistics', [
+                'user_id' => $user->id,
+                'election_id' => $election->id,
+                'total_eligible' => $totalEligibleVoters,
+                'total_voted' => $totalVoted,
+                'participation_rate' => $participationRate,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Election turnout data retrieved successfully.',
+                'data' => $turnoutData,
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('API Election Turnout: An unexpected error occurred', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'election_id' => $id,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred. Please try again later.',
+                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred',
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate turnout breakdown by class year.
+     *
+     * @param Election $election
+     * @param \Illuminate\Support\Collection $eligibleUsers
+     * @return array
+     */
+    private function calculateClassYearBreakdown(Election $election, $eligibleUsers): array
+    {
+        $classLevels = ['Freshman', 'Sophomore', 'Junior', 'Senior'];
+        $breakdown = [];
+
+        foreach ($classLevels as $classLevel) {
+            // Get eligible users for this class level
+            $eligibleForClass = $eligibleUsers->where('class_level', $classLevel);
+            $totalForClass = $eligibleForClass->count();
+
+            if ($totalForClass === 0) {
+                continue; // Skip if no eligible users in this class
+            }
+
+            // Get users who voted (distinct voters for this election)
+            $voterIds = Vote::where('election_id', $election->id)
+                ->select('voter_id')
+                ->distinct()
+                ->pluck('voter_id')
+                ->toArray();
+
+            $votedForClass = $eligibleForClass
+                ->whereIn('id', $voterIds)
+                ->count();
+
+            $percentage = $totalForClass > 0
+                ? round(($votedForClass / $totalForClass) * 100, 1)
+                : 0.0;
+
+            // Format label (pluralize)
+            $label = $classLevel === 'Freshman' ? 'Freshmen' : $classLevel . 's';
+
+            $breakdown[] = [
+                'label' => $label,
+                'voted' => $votedForClass,
+                'total' => $totalForClass,
+                'percentage' => $percentage,
+            ];
+        }
+
+        return $breakdown;
     }
 }
 

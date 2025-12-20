@@ -1,5 +1,6 @@
 # 🗳️ Fisk Voting System
 
+<!-- markdownlint-disable MD033 -->
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
@@ -7,11 +8,12 @@
 ![Next.js](https://img.shields.io/badge/Next.js-16.0.5-black.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-**A comprehensive, secure, and user-friendly electronic voting system designed for educational institutions**
+</div>
+<!-- markdownlint-enable MD033 -->
+
+## A comprehensive, secure, and user-friendly electronic voting system designed for educational institutions
 
 [Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [Usage](#-usage) • [Documentation](#-documentation) • [Contributing](#-contributing)
-
-</div>
 
 ---
 
@@ -30,7 +32,7 @@
 - [Admin Panel](#-admin-panel)
 - [Testing](#-testing)
 - [Security Features](#-security-features)
-- [Contributing](#-contributing)
+- [Contributing](#contributing)
 - [License](#-license)
 
 ---
@@ -54,6 +56,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 ## ✨ Features
 
 ### 🗳️ Voting System
+
 - **Multiple Voting Types**
   - Single-choice voting
   - Multiple-choice voting
@@ -65,6 +68,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
   - Draft, active, and closed election statuses
 
 ### 🔐 Security & Authentication
+
 - JWT-based authentication
 - Email verification system
 - Password reset functionality
@@ -73,6 +77,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 - Role-based access control (Admin, Super Admin, Student)
 
 ### 📊 Analytics & Reporting
+
 - Real-time election statistics
 - Participation rate tracking
 - Voting activity charts
@@ -80,12 +85,14 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 - Export capabilities
 
 ### 👥 User Management
+
 - Student registration with email verification
 - Profile management
 - Organization membership tracking
 - Department and major associations
 
 ### 🎨 User Interface
+
 - Modern, responsive design
 - Dark/Light theme support
 - Public-facing pages (Home, Elections, Blog, About, FAQ)
@@ -97,6 +104,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **Framework**: Laravel 12.0
 - **PHP**: 8.2+
 - **Database**: MySQL/PostgreSQL
@@ -106,11 +114,12 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 - **Media**: Spatie Media Library
 
 ### Frontend
+
 - **Framework**: Next.js 16.0.5
 - **Language**: TypeScript 5
 - **UI Library**: React 19.2.0
 - **Styling**: Tailwind CSS 4
-- **State Management**: 
+- **State Management**:
   - Zustand (global state)
   - React Query (server state)
 - **Forms**: React Hook Form + Zod
@@ -119,6 +128,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 - **HTTP Client**: Axios
 
 ### Development Tools
+
 - **Package Manager**: Composer (PHP), npm (Node.js)
 - **Version Control**: Git
 - **Testing**: Pest (PHP)
@@ -127,8 +137,7 @@ The **Fisk Voting System** is a full-stack electronic voting platform built for 
 
 ## 📁 Project Structure
 
-```
-fisk_voting_system/
+```text
 ├── backend/                 # Laravel backend application
 │   ├── app/
 │   │   ├── Http/Controllers/    # API controllers
@@ -159,6 +168,7 @@ fisk_voting_system/
     ├── SYSTEM_ARCHITECTURE.md
     ├── FEATURES_DOCUMENTATION.md
     └── ...
+
 ```
 
 ---
@@ -170,25 +180,31 @@ Before you begin, ensure you have the following installed on your system:
 ### Required Software
 
 1. **PHP 8.2 or higher**
+
    ```bash
    php -v
    ```
+
    - Required extensions: `pdo`, `pdo_mysql`, `mbstring`, `xml`, `curl`, `zip`, `gd`, `fileinfo`
 
 2. **Composer** (PHP package manager)
+
    ```bash
    composer --version
    ```
-   Install from: https://getcomposer.org/
+
+   Install from: <https://getcomposer.org/>
 
 3. **Node.js 20.x or higher** and **npm**
+
    ```bash
-   node -v
    npm -v
    ```
-   Install from: https://nodejs.org/
+
+   Install from: <https://nodejs.org/>
 
 4. **MySQL 8.0+** or **PostgreSQL 13+**
+
    ```bash
    mysql --version
    # or
@@ -196,6 +212,7 @@ Before you begin, ensure you have the following installed on your system:
    ```
 
 5. **Git**
+
    ```bash
    git --version
    ```
@@ -213,14 +230,13 @@ Before you begin, ensure you have the following installed on your system:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/4cyberlord/fisk_vote.git
+git clone <repository-url>
 cd fisk_vote
 ```
 
 ### 2. Backend Setup
 
 ```bash
-# Navigate to backend directory
 cd backend
 
 # Install PHP dependencies
@@ -239,7 +255,6 @@ php artisan jwt:secret
 ### 3. Frontend Setup
 
 ```bash
-# Navigate to client directory (from project root)
 cd client
 
 # Install Node.js dependencies
@@ -255,7 +270,6 @@ npm install
 Edit `backend/.env` file with your configuration:
 
 ```env
-# Application
 APP_NAME="Fisk Voting System"
 APP_ENV=local
 APP_DEBUG=true
@@ -290,8 +304,8 @@ FRONTEND_URL=http://localhost:3000
 
 Create `client/.env.local` file:
 
+
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -302,19 +316,19 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### 1. Create Database
 
 ```sql
-CREATE DATABASE fisk_voting CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE fisk_voting_system;
 ```
 
 ### 2. Run Migrations
 
 ```bash
-cd backend
 php artisan migrate
 ```
 
 ### 3. Seed Database with Fake Data
 
 The seeder will create:
+
 - **500 student users** with various scenarios
 - **160+ elections** (college campus style)
 - **Multiple positions** per election
@@ -329,7 +343,9 @@ The seeder will create:
 php artisan db:seed
 ```
 
-**Note**: This will populate your database with comprehensive test data including elections, candidates, and votes.
+### Note
+
+This will populate your database with comprehensive test data including elections, candidates, and votes.
 
 ### 4. Create Storage Link (for file uploads)
 
@@ -365,7 +381,6 @@ For local development that should feel like production, you can either:
 - Manually run:
 
 ```bash
-cd backend
 php artisan schedule:run
 ```
 
@@ -378,28 +393,26 @@ whenever you want scheduled tasks to execute.
 ### Start Backend Server
 
 ```bash
-cd backend
 php artisan serve
 ```
 
-The backend will be available at: **http://localhost:8000**
+The backend will be available at: **<http://localhost:8000>**
 
 ### Start Frontend Server
 
 Open a new terminal:
 
 ```bash
-cd client
 npm run dev
 ```
 
-The frontend will be available at: **http://localhost:3000**
+The frontend will be available at: **<http://localhost:3000>**
 
 ### Access Points
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000/api/v1
-- **Admin Panel**: http://localhost:8000/admin
+- **Frontend**: <http://localhost:3000>
+- **Backend API**: <http://localhost:8000/api/v1>
+- **Admin Panel**: <http://localhost:8000/admin>
   - Login with: `admin@fisk.edu` / `password`
 
 ---
@@ -442,7 +455,7 @@ The admin panel is built with Filament and provides comprehensive management cap
 
 ### Access Admin Panel
 
-1. Navigate to: http://localhost:8000/admin
+1. Navigate to: <http://localhost:8000/admin>
 2. Login with admin credentials:
    - Email: `admin@fisk.edu`
    - Password: `password`
@@ -464,19 +477,16 @@ The admin panel is built with Filament and provides comprehensive management cap
 ### Backend Tests
 
 ```bash
-cd backend
 php artisan test
 ```
 
 ### Test Admin Login
 
 ```bash
-cd backend
 php artisan tinker
 ```
 
 ```php
-$user = \App\Models\User::where('email', 'admin@fisk.edu')->first();
 $user->assignRole('Admin');
 ```
 
@@ -485,6 +495,7 @@ $user->assignRole('Admin');
 ## 🔒 Security Features
 
 ### Authentication & Authorization
+
 - JWT token-based authentication
 - Role-based access control (RBAC)
 - Email verification required for registration
@@ -492,6 +503,7 @@ $user->assignRole('Admin');
 - Session tracking and management
 
 ### Audit & Logging
+
 - Comprehensive audit logging for all user actions
 - Login/logout tracking with IP addresses
 - Device and browser information tracking
@@ -499,6 +511,7 @@ $user->assignRole('Admin');
 - Vote submission logging
 
 ### Data Protection
+
 - SQL injection protection (Eloquent ORM)
 - XSS protection (React escaping)
 - CSRF protection (Laravel built-in)
@@ -506,6 +519,7 @@ $user->assignRole('Admin');
 - Input validation (Laravel + Zod)
 
 ### Voting Security
+
 - One vote per user per election
 - Eligibility verification
 - Vote data encryption
@@ -533,19 +547,20 @@ We welcome contributions! Please follow these steps:
 
 1. **Fork the repository**
 2. **Create a feature branch**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
-3. **Make your changes**
-4. **Commit your changes**
+
+3. **Commit your changes**
+
    ```bash
-   git commit -m "Add: your feature description"
+   git commit -m "Add your feature description"
    ```
-5. **Push to the branch**
+
    ```bash
    git push origin feature/your-feature-name
    ```
-6. **Create a Pull Request**
 
 ### Code Style
 
@@ -580,15 +595,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email elections@fisk.edu or open an issue in the repository.
+For support, email [elections@fisk.edu](mailto:elections@fisk.edu) or open an issue in the repository.
 
 ---
 
+<!-- markdownlint-disable MD033 -->
 <div align="center">
 
 **Made with ❤️ for Fisk University**
 
-[⬆ Back to Top](#-fisk-voting-system)
+[⬆ Back to Top](#fisk-voting-system)
 
 </div>
+<!-- markdownlint-enable MD033 -->
 
