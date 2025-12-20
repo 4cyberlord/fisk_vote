@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Students;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -16,12 +17,49 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 class StudentAuthController extends Controller
 {
     /**
-     * Login a student and return JWT token
+     * Login a student
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Authenticates a student and returns a JWT token for subsequent API requests.
+     * The student must have a verified email address to login.
+     *
+     * @group Student Authentication
+     * @unauthenticated
+     *
+     * @bodyParam email string required The student's email address. Example: john.doe@my.fisk.edu
+     * @bodyParam password string required The student's password. Example: SecurePass123!
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Login successful.",
+     *   "data": {
+     *     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+     *     "token_type": "bearer",
+     *     "expires_in": 3600,
+     *     "user": {
+     *       "id": 1,
+     *       "email": "john.doe@my.fisk.edu",
+     *       "name": "John Doe",
+     *       "first_name": "John",
+     *       "last_name": "Doe",
+     *       "email_verified_at": "2024-01-15T10:30:00+00:00"
+     *     }
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Invalid email or password."
+     * }
+     * @response 403 {
+     *   "success": false,
+     *   "message": "You must verify your email address before logging in.",
+     *   "email_verified": false
+     * }
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many login attempts. Please try again in 60 seconds."
+     * }
      */
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         // Rate limiting: 5 login attempts per minute per IP
         $key = 'student-login:' . $request->ip();
@@ -310,12 +348,179 @@ class StudentAuthController extends Controller
     }
 
     /**
+     * Resend verification email
+     *
+     * Resends the email verification link to the user's email address.
+     * Rate limited to prevent abuse.
+     *
+     * @group Student Authentication
+     * @unauthenticated
+     *
+     * @bodyParam email string required The student's email address. Example: john.doe@my.fisk.edu
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "Verification link sent. Please check your email."
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Email address not found."
+     * }
+     * @response 400 {
+     *   "success": false,
+     *   "message": "Email already verified."
+     * }
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many attempts. Please try again in 60 seconds."
+     * }
+     */
+    public function resendVerification(Request $request): JsonResponse
+    {
+        // Rate limiting: 3 resend attempts per minute per IP
+        $key = 'resend-verification:' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($key, 3)) {
+            $seconds = RateLimiter::availableIn($key);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Too many attempts. Please try again in ' . $seconds . ' seconds.',
+            ], 429);
+        }
+
+        RateLimiter::hit($key, 60); // 60 seconds = 1 minute
+
+        try {
+            // Validate the request
+            $validated = $request->validate([
+                'email' => ['required', 'string', 'email'],
+            ], [
+                'email.required' => 'Email address is required.',
+                'email.email' => 'Please provide a valid email address.',
+            ]);
+
+            // Find user by email
+            $user = User::where('email', $validated['email'])->first();
+
+            if (!$user) {
+                Log::warning('API Resend Verification: User not found', [
+                    'email' => $validated['email'],
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email address not found.',
+                ], 422);
+            }
+
+            // Check if already verified
+            if ($user->hasVerifiedEmail()) {
+                Log::info('API Resend Verification: Email already verified', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Email already verified. You can now login.',
+                ], 400);
+            }
+
+            // Send verification email
+            try {
+                $user->sendEmailVerificationNotification();
+
+                Log::info('API Resend Verification: Verification email sent', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Verification link sent. Please check your email (including spam folder).',
+                ], 200);
+
+            } catch (\Exception $e) {
+                Log::error('API Resend Verification: Failed to send email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email,
+                    'error' => $e->getMessage(),
+                    'ip' => $request->ip(),
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send verification email. Please try again later.',
+                ], 500);
+            }
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            Log::error('API Resend Verification: Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred. Please try again later.',
+            ], 500);
+        }
+    }
+
+    /**
      * Get the authenticated user
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Returns the complete profile information of the currently authenticated student.
+     * Requires a valid JWT token in the Authorization header.
+     *
+     * @group Student Profile
+     *
+     * @response 200 {
+     *   "success": true,
+     *   "message": "User data retrieved successfully.",
+     *   "data": {
+     *     "id": 1,
+     *     "name": "John Doe",
+     *     "first_name": "John",
+     *     "last_name": "Doe",
+     *     "middle_initial": "A",
+     *     "email": "john.doe@my.fisk.edu",
+     *     "university_email": "john.doe@my.fisk.edu",
+     *     "personal_email": null,
+     *     "email_verified_at": "2024-01-15T10:30:00+00:00",
+     *     "student_id": "12345678",
+     *     "department": "Computer Science",
+     *     "major": "Software Engineering",
+     *     "class_level": "Senior",
+     *     "enrollment_status": "Active",
+     *     "student_type": "Full-time",
+     *     "citizenship_status": "US Citizen",
+     *     "phone_number": "+1234567890",
+     *     "address": "123 Main St",
+     *     "profile_photo": null,
+     *     "roles": ["Student"],
+     *     "organizations": [],
+     *     "created_at": "2024-01-15T10:00:00+00:00",
+     *     "updated_at": "2024-01-15T10:30:00+00:00"
+     *   }
+     * }
+     * @response 401 {
+     *   "success": false,
+     *   "message": "User not authenticated."
+     * }
      */
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
         try {
             $user = auth('api')->user();

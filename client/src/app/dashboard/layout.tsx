@@ -2,6 +2,7 @@
 
 import { ProtectedRoute } from "@/components";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { ProfileCompletionModal } from "@/components/profile/ProfileCompletionModal";
 
 export default function DashboardLayoutWrapper({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayoutWrapper({
   return (
     <ProtectedRoute>
       <DashboardLayout>{children}</DashboardLayout>
+      <ProfileCompletionModal />
     </ProtectedRoute>
   );
 }

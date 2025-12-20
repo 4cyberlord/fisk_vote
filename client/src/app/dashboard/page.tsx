@@ -28,6 +28,7 @@ import {
   BarChart2,
   CalendarDays,
 } from "lucide-react";
+import { ElectionTurnoutChart } from "@/components/dashboard/ElectionTurnoutChart";
 import { useCurrentUser } from "@/hooks/useAuth";
 import {
   useActiveElections,
@@ -711,6 +712,9 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Election Turnout Statistics - Full Width Card */}
+        <ElectionTurnoutChart />
 
         {/* Row 3: Active elections, Calendar, Recent activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

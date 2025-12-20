@@ -12,6 +12,10 @@ import {
   AnalyticsData,
   resultsService,
   ElectionResult,
+  turnoutService,
+  ElectionTurnout,
+  votingStatsService,
+  VotingStatsResponse,
 } from "@/services/electionService";
 import { setServerTime } from "@/lib/timeService";
 
@@ -191,6 +195,83 @@ export function useActiveElections() {
           onError: (error) => {
             console.error("useAllResults query error:", error);
           },
+        });
+      }
+
+      /**
+       * Hook to get turnout statistics for a specific election
+       */
+      export function useElectionTurnout(
+        electionId: number | null,
+        includeBreakdown: boolean = false
+      ) {
+        return useQuery<ElectionTurnout, Error>({
+          queryKey: ["election-turnout", electionId, includeBreakdown],
+          queryFn: async () => {
+            if (!electionId) return null as any;
+            const response = await turnoutService.getElectionTurnout(
+              electionId,
+              includeBreakdown
+            );
+            return response.data;
+          },
+          enabled: !!electionId,
+          staleTime: 30 * 1000, // 30 seconds for active elections
+          retry: 1,
+        });
+      }
+
+      /**
+       * Hook to get turnout statistics for all elections
+       */
+      export function useAllElectionsTurnout() {
+        const { data: elections } = useAllElections();
+
+        return useQuery<
+          Array<{ election: Election; turnout: ElectionTurnout | null }>,
+          Error
+        >({
+          queryKey: ["all-elections-turnout", elections?.map((e) => e.id)],
+          queryFn: async () => {
+            if (!elections || elections.length === 0) return [];
+
+            // Fetch turnout for all elections in parallel
+            const turnoutPromises = elections.map(async (election) => {
+              try {
+                const response = await turnoutService.getElectionTurnout(
+                  election.id,
+                  false
+                );
+                return { election, turnout: response.data };
+              } catch (error) {
+                console.error(
+                  `Failed to fetch turnout for election ${election.id}:`,
+                  error
+                );
+                return { election, turnout: null };
+              }
+            });
+
+            return Promise.all(turnoutPromises);
+          },
+          enabled: !!elections && elections.length > 0,
+          staleTime: 30 * 1000, // 30 seconds
+          retry: 1,
+        });
+      }
+
+      /**
+       * Hook to get voting statistics for the authenticated student
+       */
+      export function useVotingStats() {
+        return useQuery<VotingStatsResponse["data"], Error>({
+          queryKey: ["voting-stats"],
+          queryFn: async () => {
+            const response = await votingStatsService.getVotingStats();
+            return response.data;
+          },
+          staleTime: 2 * 60 * 1000, // 2 minutes
+          retry: 1,
         });
       }
 

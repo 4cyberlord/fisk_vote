@@ -221,6 +221,112 @@ class StudentProfileController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Update the authenticated student's profile.
+     *
+     * PUT /api/v1/students/me
+     */
+    public function updateProfile(Request $request)
+    {
+        try {
+            $user = auth('api')->user();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not authenticated.',
+                ], 401);
+            }
+
+            $validated = $request->validate([
+                'personal_email' => ['nullable', 'string', 'email', 'max:255'],
+                'phone_number' => ['nullable', 'string', 'max:255'],
+                'address' => ['nullable', 'string', 'max:500'],
+                'department' => ['nullable', 'string', 'max:255'],
+                'major' => ['nullable', 'string', 'max:255'],
+                'class_level' => ['nullable', 'string', 'in:Freshman,Sophomore,Junior,Senior'],
+                'student_type' => ['nullable', 'string', 'in:Undergraduate,Graduate,Transfer,International'],
+                'enrollment_status' => ['nullable', 'string', 'in:Active,Suspended,Graduated'],
+                'citizenship_status' => ['nullable', 'string', 'max:255'],
+                'organizations' => ['nullable', 'array'],
+                'organizations.*' => ['exists:organizations,id'],
+            ], [
+                'personal_email.email' => 'Please provide a valid email address.',
+                'class_level.in' => 'Class level must be one of: Freshman, Sophomore, Junior, Senior.',
+                'student_type.in' => 'Student type must be one of: Undergraduate, Graduate, Transfer, International.',
+                'enrollment_status.in' => 'Enrollment status must be one of: Active, Suspended, Graduated.',
+            ]);
+
+            // Update user profile fields
+            $user->update([
+                'personal_email' => $validated['personal_email'] ?? $user->personal_email,
+                'phone_number' => $validated['phone_number'] ?? $user->phone_number,
+                'address' => $validated['address'] ?? $user->address,
+                'department' => $validated['department'] ?? $user->department,
+                'major' => $validated['major'] ?? $user->major,
+                'class_level' => $validated['class_level'] ?? $user->class_level,
+                'student_type' => $validated['student_type'] ?? $user->student_type,
+                'enrollment_status' => $validated['enrollment_status'] ?? $user->enrollment_status,
+                'citizenship_status' => $validated['citizenship_status'] ?? $user->citizenship_status,
+            ]);
+
+            // Sync organizations if provided
+            if (isset($validated['organizations'])) {
+                $user->organizations()->sync($validated['organizations']);
+            }
+
+            // Refresh user to get updated data
+            $user->refresh();
+
+            Log::info('API Student Profile: Updated profile', [
+                'user_id' => $user->id,
+                'updated_fields' => array_keys($validated),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully.',
+                'data' => [
+                    'user' => [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'name' => $user->name,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'student_id' => $user->student_id,
+                        'department' => $user->department,
+                        'major' => $user->major,
+                        'class_level' => $user->class_level,
+                        'student_type' => $user->student_type,
+                        'enrollment_status' => $user->enrollment_status,
+                        'citizenship_status' => $user->citizenship_status,
+                        'personal_email' => $user->personal_email,
+                        'phone_number' => $user->phone_number,
+                        'address' => $user->address,
+                    ],
+                ],
+            ], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('API Student Profile: Failed to update profile', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => $user->id ?? 'unknown',
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred. Please try again later.',
+                'error' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred',
+            ], 500);
+        }
+    }
 }
 
 

@@ -11,6 +11,8 @@ use App\Http\Controllers\Api\Students\StudentAuditLogController;
 use App\Http\Controllers\Api\Students\StudentSessionController;
 use App\Http\Controllers\Api\Students\StudentCalendarController;
 use App\Http\Controllers\Api\Students\NotificationController;
+use App\Http\Controllers\Api\Students\StudentStatsController;
+use App\Http\Controllers\Api\Students\CampusParticipationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +38,10 @@ Route::prefix('students')->group(function () {
     // Authentication
     Route::post('/login', [StudentAuthController::class, 'login'])
         ->name('api.v1.students.login');
+
+    // Resend verification email
+    Route::post('/resend-verification', [StudentAuthController::class, 'resendVerification'])
+        ->name('api.v1.students.resend-verification');
 
     // Email Verification (for API registrations)
     Route::middleware(['signed', 'throttle:6,1'])
@@ -93,6 +99,9 @@ Route::prefix('students')->group(function () {
             ->name('api.v1.students.me');
 
         // Profile
+        Route::put('/me', [StudentProfileController::class, 'updateProfile'])
+            ->name('api.v1.students.profile.update');
+
         Route::post('/me/profile-photo', [StudentProfileController::class, 'updateProfilePhoto'])
             ->name('api.v1.students.profile.photo');
 
@@ -121,6 +130,14 @@ Route::prefix('students')->group(function () {
         Route::get('/analytics', [StudentAnalyticsController::class, 'getAnalytics'])
             ->name('api.v1.students.analytics');
 
+        // Stats
+        Route::get('/me/stats', [StudentStatsController::class, 'getStats'])
+            ->name('api.v1.students.stats');
+
+        // Campus Participation
+        Route::get('/campus-participation', [CampusParticipationController::class, 'getCampusParticipation'])
+            ->name('api.v1.students.campus-participation');
+
         // Elections
         Route::get('/elections', [StudentElectionController::class, 'getAllElections'])
             ->name('api.v1.students.elections.all');
@@ -135,7 +152,11 @@ Route::prefix('students')->group(function () {
         Route::get('/elections/{id}/results', [\App\Http\Controllers\Api\Students\StudentResultsController::class, 'getElectionResults'])
             ->name('api.v1.students.elections.results.show');
 
-        // Specific election - MUST come after /elections/results
+        // Turnout - MUST come before /elections/{id} to avoid route conflict
+        Route::get('/elections/{id}/turnout', [StudentElectionController::class, 'getElectionTurnout'])
+            ->name('api.v1.students.elections.turnout');
+
+        // Specific election - MUST come after /elections/results and /elections/{id}/turnout
         Route::get('/elections/{id}', [StudentElectionController::class, 'getElection'])
             ->name('api.v1.students.elections.show');
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Students;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +21,52 @@ class StudentRegistrationController extends Controller
     /**
      * Register a new student
      *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Creates a new student account in the system. After successful registration,
+     * a verification email will be sent to the provided email address.
+     *
+     * This endpoint allows unauthenticated users to create a new student account.
+     * The student must verify their email before they can log in.
+     *
+     * @group Student Authentication
+     * @unauthenticated
+     *
+     * @bodyParam first_name string required The student's first name. Example: John
+     * @bodyParam middle_initial string nullable The student's middle initial. Example: A
+     * @bodyParam last_name string required The student's last name. Example: Doe
+     * @bodyParam student_id string required The student's unique ID (numbers only). Example: 12345678
+     * @bodyParam email string required The student's Fisk University email (must end with @my.fisk.edu). Example: john.doe@my.fisk.edu
+     * @bodyParam password string required The password (min 8 characters). Example: SecurePass123!
+     * @bodyParam password_confirmation string required Must match the password field. Example: SecurePass123!
+     * @bodyParam accept_terms boolean required Must be true to accept Terms of Service. Example: true
+     *
+     * @response 201 {
+     *   "success": true,
+     *   "message": "Registration successful. Please check your email to verify your account.",
+     *   "data": {
+     *     "user": {
+     *       "id": 1,
+     *       "email": "john.doe@my.fisk.edu",
+     *       "name": "John A Doe",
+     *       "first_name": "John",
+     *       "last_name": "Doe",
+     *       "student_id": "12345678",
+     *       "email_verified_at": null
+     *     }
+     *   }
+     * }
+     * @response 422 {
+     *   "success": false,
+     *   "message": "Validation failed",
+     *   "errors": {
+     *     "email": ["Please use your Fisk University email address ending with @my.fisk.edu."]
+     *   }
+     * }
+     * @response 429 {
+     *   "success": false,
+     *   "message": "Too many registration attempts. Please try again in 60 seconds."
+     * }
      */
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         // Rate limiting: 2 registrations per minute per IP (matching Filament)
         $key = 'student-registration:' . $request->ip();

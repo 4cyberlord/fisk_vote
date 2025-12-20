@@ -269,6 +269,36 @@ class ElectionService {
 
       export const voteService = new VoteService();
 
+      // ═══════════════════════════════════════════════════════════════════════════
+      // VOTING STATS SERVICE
+      // ═══════════════════════════════════════════════════════════════════════════
+
+      export interface VotingStatsResponse {
+        success: boolean;
+        message?: string;
+        data: {
+          elections_voted: number;
+          campus_rank: number;
+          percentile: number;
+          total_students: number;
+          impact_score: number;
+          campus_impact_score: number;
+          impact_description: string;
+        };
+      }
+
+      class VotingStatsService {
+        /**
+         * Get voting statistics for the authenticated student
+         */
+        async getVotingStats(): Promise<VotingStatsResponse> {
+          const response = await api.get<VotingStatsResponse>("/students/me/stats");
+          return response.data;
+        }
+      }
+
+      export const votingStatsService = new VotingStatsService();
+
       // Analytics interfaces
       export interface AnalyticsData {
         overview: {
@@ -479,4 +509,54 @@ class ElectionService {
       }
 
       export const resultsService = new ResultsService();
+
+      // Turnout interfaces
+      export interface TurnoutStats {
+        total_eligible_voters: number;
+        total_voted: number;
+        participation_rate: number;
+        participation_goal: number;
+        votes_remaining: number;
+        percentage_to_goal: number;
+      }
+
+      export interface ClassYearStats {
+        label: string;
+        voted: number;
+        total: number;
+        percentage: number;
+      }
+
+      export interface ElectionTurnout {
+        election_id: number;
+        election_title: string;
+        status: "active" | "upcoming" | "closed";
+        turnout: TurnoutStats;
+        by_class_year?: ClassYearStats[];
+        updated_at: string;
+      }
+
+      export interface ElectionTurnoutResponse {
+        success: boolean;
+        message: string;
+        data: ElectionTurnout;
+      }
+
+      class TurnoutService {
+        /**
+         * Get turnout statistics for a specific election
+         */
+        async getElectionTurnout(
+          electionId: number,
+          includeBreakdown: boolean = false
+        ): Promise<ElectionTurnoutResponse> {
+          const params = includeBreakdown ? "?include_breakdown=true" : "";
+          const response = await api.get<ElectionTurnoutResponse>(
+            `/students/elections/${electionId}/turnout${params}`
+          );
+          return response.data;
+        }
+      }
+
+      export const turnoutService = new TurnoutService();
 

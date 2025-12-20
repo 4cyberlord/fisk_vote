@@ -8,6 +8,9 @@ import { api } from "@/lib/axios";
 import { useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import Avatar, { genConfig } from "react-nice-avatar";
+// import { useVotingStats } from "@/hooks/useElections"; // ARCHIVED
+import Link from "next/link";
+import { Vote, TrendingUp, Award, History, Calendar, CheckCircle } from "lucide-react";
 
 // Helper to resolve image URLs (handles relative paths from backend)
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
@@ -45,6 +48,7 @@ function formatPhoneNumber(phone: string | null | undefined): string {
 export default function ProfilePage() {
   const { user: storeUser } = useAuth();
   const { data: currentUserData, isLoading } = useCurrentUser();
+  // const { data: votingStats, isLoading: isLoadingStats } = useVotingStats(); // ARCHIVED
   const [isSaving, setIsSaving] = useState(false);
   const [showProfilePhoto, setShowProfilePhoto] = useState(true);
   const [showOrganizations, setShowOrganizations] = useState(true);
@@ -101,11 +105,30 @@ export default function ProfilePage() {
 
   const handleProfileSubmit = async (data: any) => {
     setIsSaving(true);
-    // TODO: Implement API call to update profile
-    setTimeout(() => {
+    try {
+      const updateData: any = {};
+      
+      if (data.personalEmail) updateData.personal_email = data.personalEmail;
+      if (data.phoneNumber) updateData.phone_number = data.phoneNumber.replace(/-/g, "");
+      if (data.address) updateData.address = data.address;
+      if (data.department) updateData.department = data.department;
+      if (data.major) updateData.major = data.major;
+      if (data.classLevel) updateData.class_level = data.classLevel;
+      if (data.studentType) updateData.student_type = data.studentType;
+      if (data.citizenshipStatus) updateData.citizenship_status = data.citizenshipStatus;
+
+      await api.put("/students/me", updateData);
+      
+      // Refresh user data
+      await queryClient.invalidateQueries({ queryKey: ["user", "current"] });
+      
+      toast.success("Profile updated successfully!");
+    } catch (error: any) {
+      const message = error?.response?.data?.message || "Failed to update profile";
+      toast.error(message);
+    } finally {
       setIsSaving(false);
-      // Show success toast
-    }, 1000);
+    }
   };
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -331,6 +354,156 @@ export default function ProfilePage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Voting Activity Section - ARCHIVED */}
+          {/* <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Voting Activity</h2>
+                <Link
+                  href="/dashboard/vote/history"
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+                >
+                  View History
+                </Link>
+              </div>
+
+              {isLoadingStats ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : votingStats ? (
+                <>
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Vote className="w-5 h-5 text-indigo-600" />
+                        <p className="text-2xl font-bold text-gray-900">
+                          {votingStats.elections_voted || 0}
+                        </p>
+                      </div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Elections Voted
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <Award className="w-5 h-5 text-indigo-600" />
+                        <p className="text-2xl font-bold text-indigo-600">
+                          #{votingStats.campus_rank || 0}
+                        </p>
+                      </div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Campus Rank
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-2 mb-2">
+                        <TrendingUp className="w-5 h-5 text-indigo-600" />
+                        <p className="text-2xl font-bold text-gray-900">
+                          {votingStats.percentile?.toFixed(1) || "0.0"}%
+                        </p>
+                      </div>
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                        Percentile
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-900">
+                        Campus Impact Score
+                      </p>
+                      <p className="text-sm font-bold text-indigo-600">
+                        {votingStats.impact_score && votingStats.impact_score > 0
+                          ? `${votingStats.impact_score}/200`
+                          : `${Math.round(votingStats.campus_impact_score || 0)}%`}
+                      </p>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-indigo-600 transition-all duration-600 ease-out rounded-full"
+                        style={{
+                          width: `${Math.min(
+                            (votingStats.campus_impact_score || 0) / 100,
+                            1
+                          ) * 100}%`,
+                        }}
+                      />
+                    </div>
+                    {votingStats.impact_description && (
+                      <p className="text-xs text-gray-500 italic mt-1">
+                        {votingStats.impact_description}
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No voting statistics available yet.
+                </p>
+              )}
+            </div>
+          </div> */}
+
+          {/* Voting History Section */}
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-100 rounded-lg">
+                    <History className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Voting History
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Track record of all elections you've participated in
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Link
+                href="/dashboard/vote/history"
+                className="block w-full"
+              >
+                <div className="flex items-center justify-between p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors duration-200 cursor-pointer border border-indigo-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white rounded-lg">
+                      <Calendar className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        My Votes
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        View all elections you've participated in
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-indigo-600" />
+                    <svg
+                      className="w-5 h-5 text-indigo-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </Link>
             </div>
           </div>
 

@@ -21,6 +21,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     require __DIR__ . '/api/v1/students.php';
 
+    // Public routes (no authentication required)
+    Route::get('/departments', [\App\Http\Controllers\Api\DepartmentController::class, 'index'])->name('api.v1.departments.index');
+    Route::get('/majors', [\App\Http\Controllers\Api\MajorController::class, 'index'])->name('api.v1.majors.index');
+
     // Blog routes (public)
     Route::prefix('blog')->name('api.v1.blog.')->group(function () {
         Route::get('/posts', [\App\Http\Controllers\Api\BlogController::class, 'index'])->name('posts.index');
